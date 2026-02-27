@@ -35,8 +35,7 @@ export default function BillPanel({
   onClose,
   currencySymbol = '$',
   tableNumber,
-  tableKey,
-}: Props & { currencySymbol?: string; tableKey?: string; tableNumber?: string }) {
+}: Props & { currencySymbol?: string; tableNumber?: string }) {
   const [orders, setOrders] = useState<BillOrder[]>([])
   const [splitCount, setSplitCount] = useState(1)
   const [callingWaiter, setCallingWaiter] = useState(false)

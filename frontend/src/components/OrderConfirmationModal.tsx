@@ -9,7 +9,6 @@ interface Props {
   onClose: () => void
   onConfirmed: () => void
   initialTable?: string
-  tableKey?: string
 }
 
 export default function OrderConfirmationModal({
@@ -19,7 +18,6 @@ export default function OrderConfirmationModal({
   onConfirmed,
   initialTable,
   currencySymbol = '$',
-  tableKey,
 }: Props & { currencySymbol?: string }) {
   const { items, totalPrice, clear } = useCart()
   const [tableNumber, setTableNumber] = useState(initialTable ?? '')

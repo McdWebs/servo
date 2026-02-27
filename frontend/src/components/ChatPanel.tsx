@@ -36,6 +36,7 @@ export default function ChatPanel({ restaurantId, tableKey, open, onClose, curre
   const startNewChat = () => {
     setMessages([])
     try {
+      const storageKey = `ai-waiter:chat:${restaurantId}:${tableKey ?? 'default'}`
       window.localStorage.removeItem(storageKey)
     } catch {
       // ignore persistence errors
