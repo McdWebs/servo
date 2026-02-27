@@ -90,18 +90,18 @@ router.post('/restaurants', async (req, res) => {
 
 router.get('/restaurants/:restaurantId/admin-menu', authenticateOwner, async (req, res) => {
   try {
-    const { restaurantId } = req.params
+    const restaurantIdParam = String(req.params.restaurantId)
 
-    if (!Types.ObjectId.isValid(restaurantId)) {
+    if (!Types.ObjectId.isValid(restaurantIdParam)) {
       return res.status(400).json({ message: 'Invalid restaurantId' })
     }
 
     const ownerRestaurantId = (req as any).ownerRestaurantId as string | undefined
-    if (!ownerRestaurantId || ownerRestaurantId !== restaurantId) {
+    if (!ownerRestaurantId || ownerRestaurantId !== restaurantIdParam) {
       return res.status(403).json({ message: 'Forbidden' })
     }
 
-    const restaurant = await Restaurant.findById(restaurantId).lean()
+    const restaurant = await Restaurant.findById(restaurantIdParam).lean()
     if (!restaurant) {
       return res.status(404).json({ message: 'Restaurant not found' })
     }
@@ -130,15 +130,15 @@ router.get('/restaurants/:restaurantId/admin-menu', authenticateOwner, async (re
 
 router.patch('/restaurants/:restaurantId', authenticateOwner, async (req, res) => {
   try {
-    const { restaurantId } = req.params
+    const restaurantIdParam = String(req.params.restaurantId)
     const { name, currency } = req.body as { name?: string; currency?: string }
 
-    if (!Types.ObjectId.isValid(restaurantId)) {
+    if (!Types.ObjectId.isValid(restaurantIdParam)) {
       return res.status(400).json({ message: 'Invalid restaurantId' })
     }
 
     const ownerRestaurantId = (req as any).ownerRestaurantId as string | undefined
-    if (!ownerRestaurantId || ownerRestaurantId !== restaurantId) {
+    if (!ownerRestaurantId || ownerRestaurantId !== restaurantIdParam) {
       return res.status(403).json({ message: 'Forbidden' })
     }
 
@@ -146,7 +146,7 @@ router.patch('/restaurants/:restaurantId', authenticateOwner, async (req, res) =
     if (typeof name === 'string' && name.trim()) update.name = name.trim()
     if (typeof currency === 'string' && currency.trim()) update.currency = currency.trim().toUpperCase()
 
-    const restaurant = await Restaurant.findByIdAndUpdate(restaurantId, update, {
+    const restaurant = await Restaurant.findByIdAndUpdate(restaurantIdParam, update, {
       new: true,
     }).lean()
 
@@ -164,30 +164,30 @@ router.patch('/restaurants/:restaurantId', authenticateOwner, async (req, res) =
 
 router.post('/restaurants/:restaurantId/categories', authenticateOwner, async (req, res) => {
   try {
-    const { restaurantId } = req.params
+    const restaurantIdParam = String(req.params.restaurantId)
     const { name } = req.body as { name?: string }
 
-    if (!Types.ObjectId.isValid(restaurantId)) {
+    if (!Types.ObjectId.isValid(restaurantIdParam)) {
       return res.status(400).json({ message: 'Invalid restaurantId' })
     }
     const ownerRestaurantId = (req as any).ownerRestaurantId as string | undefined
-    if (!ownerRestaurantId || ownerRestaurantId !== restaurantId) {
+    if (!ownerRestaurantId || ownerRestaurantId !== restaurantIdParam) {
       return res.status(403).json({ message: 'Forbidden' })
     }
     if (!name || !name.trim()) {
       return res.status(400).json({ message: 'Category name is required' })
     }
 
-    const existing = await MenuCategory.find({ restaurantId: new Types.ObjectId(restaurantId) })
+    const existing = await MenuCategory.find({ restaurantId: new Types.ObjectId(restaurantIdParam) })
       .sort({ position: -1 })
       .limit(1)
       .lean()
-    const nextPosition = existing.length > 0 && typeof existing[0].position === 'number'
-      ? existing[0].position + 1
-      : 0
+    const lastCategory = existing[0]
+    const nextPosition =
+      lastCategory && typeof lastCategory.position === 'number' ? lastCategory.position + 1 : 0
 
     const category = await MenuCategory.create({
-      restaurantId: new Types.ObjectId(restaurantId),
+      restaurantId: new Types.ObjectId(restaurantIdParam),
       name: name.trim(),
       position: nextPosition,
     })
@@ -202,10 +202,10 @@ router.post('/restaurants/:restaurantId/categories', authenticateOwner, async (r
 
 router.patch('/categories/:categoryId', authenticateOwner, async (req, res) => {
   try {
-    const { categoryId } = req.params
+    const categoryIdParam = String(req.params.categoryId)
     const { name, position } = req.body as { name?: string; position?: number }
 
-    if (!Types.ObjectId.isValid(categoryId)) {
+    if (!Types.ObjectId.isValid(categoryIdParam)) {
       return res.status(400).json({ message: 'Invalid categoryId' })
     }
 
@@ -213,6 +213,7 @@ router.patch('/categories/:categoryId', authenticateOwner, async (req, res) => {
     if (!ownerRestaurantId) {
       return res.status(403).json({ message: 'Forbidden' })
     }
+    const ownerRestaurantObjectId = new Types.ObjectId(ownerRestaurantId)
 
     const update: Record<string, unknown> = {}
     if (typeof name === 'string') {
@@ -222,10 +223,10 @@ router.patch('/categories/:categoryId', authenticateOwner, async (req, res) => {
       update.position = position
     }
 
-    const category = await MenuCategory.findByIdAndUpdate(
+    const category = await MenuCategory.findOneAndUpdate(
       {
-        _id: categoryId,
-        restaurantId: ownerRestaurantId,
+        _id: new Types.ObjectId(categoryIdParam),
+        restaurantId: ownerRestaurantObjectId,
       },
       update,
       {
@@ -247,9 +248,9 @@ router.patch('/categories/:categoryId', authenticateOwner, async (req, res) => {
 
 router.delete('/categories/:categoryId', authenticateOwner, async (req, res) => {
   try {
-    const { categoryId } = req.params
+    const categoryIdParam = String(req.params.categoryId)
 
-    if (!Types.ObjectId.isValid(categoryId)) {
+    if (!Types.ObjectId.isValid(categoryIdParam)) {
       return res.status(400).json({ message: 'Invalid categoryId' })
     }
 
@@ -257,10 +258,11 @@ router.delete('/categories/:categoryId', authenticateOwner, async (req, res) => 
     if (!ownerRestaurantId) {
       return res.status(403).json({ message: 'Forbidden' })
     }
+    const ownerRestaurantObjectId = new Types.ObjectId(ownerRestaurantId)
 
     const category = await MenuCategory.findOneAndDelete({
-      _id: categoryId,
-      restaurantId: ownerRestaurantId,
+      _id: new Types.ObjectId(categoryIdParam),
+      restaurantId: ownerRestaurantObjectId,
     }).lean()
     if (!category) {
       return res.status(404).json({ message: 'Category not found' })
@@ -281,87 +283,103 @@ router.post(
   authenticateOwner,
   upload.single('image'),
   async (req, res) => {
-  try {
-    const { categoryId } = req.params
-    const { name, description } = req.body as {
-      name?: string
-      description?: string
+    try {
+      const categoryIdParam = String(req.params.categoryId)
+      const { name, description } = req.body as {
+        name?: string
+        description?: string
+      }
+
+      const price =
+        typeof (req.body as any).price === 'string'
+          ? Number((req.body as any).price)
+          : (req.body as any).price
+
+      const rawAllergens =
+        typeof (req.body as any).allergens === 'string'
+          ? ((req.body as any).allergens as string).split(',').map((a) => a.trim()).filter(Boolean)
+          : ((req.body as any).allergens as string[] | undefined)
+
+      const rawTags =
+        typeof (req.body as any).tags === 'string'
+          ? ((req.body as any).tags as string).split(',').map((t) => t.trim()).filter(Boolean)
+          : ((req.body as any).tags as string[] | undefined)
+
+      if (!Types.ObjectId.isValid(categoryIdParam)) {
+        return res.status(400).json({ message: 'Invalid categoryId' })
+      }
+      const ownerRestaurantId = (req as any).ownerRestaurantId as string | undefined
+      if (!ownerRestaurantId) {
+        return res.status(403).json({ message: 'Forbidden' })
+      }
+      const ownerRestaurantObjectId = new Types.ObjectId(ownerRestaurantId)
+      if (!name || !name.trim() || !description || !description.trim()) {
+        return res.status(400).json({ message: 'Name and description are required' })
+      }
+      if (typeof price !== 'number' || Number.isNaN(price) || price <= 0) {
+        return res.status(400).json({ message: 'Price must be a positive number' })
+      }
+
+      const category = await MenuCategory.findOne({
+        _id: new Types.ObjectId(categoryIdParam),
+        restaurantId: ownerRestaurantObjectId,
+      }).lean()
+      if (!category) {
+        return res.status(404).json({ message: 'Category not found' })
+      }
+
+      const existing = await MenuItem.find({ categoryId: new Types.ObjectId(categoryIdParam) })
+        .sort({ position: -1 })
+        .limit(1)
+        .lean()
+      const lastItem = existing[0]
+      const nextPosition =
+        lastItem && typeof lastItem.position === 'number' ? lastItem.position + 1 : 0
+
+      let imageUrl: string | undefined
+      if (req.file) {
+        imageUrl = await uploadMenuItemImage(req.file)
+      }
+
+      const newItemData: {
+        categoryId: Types.ObjectId
+        name: string
+        description: string
+        price: number
+        allergens: string[]
+        tags: string[]
+        position: number
+        available: true
+        imageUrl?: string
+      } = {
+        categoryId: new Types.ObjectId(categoryIdParam),
+        name: name.trim(),
+        description: description.trim(),
+        price,
+        allergens: rawAllergens ?? [],
+        tags: rawTags ?? [],
+        position: nextPosition,
+        available: true,
+      }
+
+      if (imageUrl !== undefined) {
+        newItemData.imageUrl = imageUrl
+      }
+
+      const item = await MenuItem.create(newItemData)
+
+      return res.status(201).json(item)
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err)
+      return res.status(500).json({ message: 'Failed to create item' })
     }
-
-    const price =
-      typeof (req.body as any).price === 'string'
-        ? Number((req.body as any).price)
-        : (req.body as any).price
-
-    const rawAllergens =
-      typeof (req.body as any).allergens === 'string'
-        ? ((req.body as any).allergens as string).split(',').map((a) => a.trim()).filter(Boolean)
-        : ((req.body as any).allergens as string[] | undefined)
-
-    const rawTags =
-      typeof (req.body as any).tags === 'string'
-        ? ((req.body as any).tags as string).split(',').map((t) => t.trim()).filter(Boolean)
-        : ((req.body as any).tags as string[] | undefined)
-
-    if (!Types.ObjectId.isValid(categoryId)) {
-      return res.status(400).json({ message: 'Invalid categoryId' })
-    }
-    const ownerRestaurantId = (req as any).ownerRestaurantId as string | undefined
-    if (!ownerRestaurantId) {
-      return res.status(403).json({ message: 'Forbidden' })
-    }
-    if (!name || !name.trim() || !description || !description.trim()) {
-      return res.status(400).json({ message: 'Name and description are required' })
-    }
-    if (typeof price !== 'number' || Number.isNaN(price) || price <= 0) {
-      return res.status(400).json({ message: 'Price must be a positive number' })
-    }
-
-    const category = await MenuCategory.findOne({
-      _id: categoryId,
-      restaurantId: ownerRestaurantId,
-    }).lean()
-    if (!category) {
-      return res.status(404).json({ message: 'Category not found' })
-    }
-
-    const existing = await MenuItem.find({ categoryId: new Types.ObjectId(categoryId) })
-      .sort({ position: -1 })
-      .limit(1)
-      .lean()
-    const nextPosition = existing.length > 0 && typeof existing[0].position === 'number'
-      ? existing[0].position + 1
-      : 0
-
-    let imageUrl: string | undefined
-    if (req.file) {
-      imageUrl = await uploadMenuItemImage(req.file)
-    }
-
-    const item = await MenuItem.create({
-      categoryId: new Types.ObjectId(categoryId),
-      name: name.trim(),
-      description: description.trim(),
-      price,
-      allergens: rawAllergens ?? [],
-      tags: rawTags ?? [],
-      position: nextPosition,
-      imageUrl,
-      available: true,
-    })
-
-    return res.status(201).json(item)
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error(err)
-    return res.status(500).json({ message: 'Failed to create item' })
   }
-}
 )
 
 router.patch('/items/:itemId', authenticateOwner, upload.single('image'), async (req, res) => {
   try {
-    const { itemId } = req.params
+    const itemIdParam = String(req.params.itemId)
     const body = req.body as any
 
     const name = typeof body.name === 'string' ? body.name : undefined
@@ -396,7 +414,7 @@ router.patch('/items/:itemId', authenticateOwner, upload.single('image'), async 
     const removeImageRaw = body.removeImage as string | undefined
     const availableRaw = body.available as string | boolean | undefined
 
-    if (!Types.ObjectId.isValid(itemId)) {
+    if (!Types.ObjectId.isValid(itemIdParam)) {
       return res.status(400).json({ message: 'Invalid itemId' })
     }
 
@@ -404,6 +422,7 @@ router.patch('/items/:itemId', authenticateOwner, upload.single('image'), async 
     if (!ownerRestaurantId) {
       return res.status(403).json({ message: 'Forbidden' })
     }
+    const ownerRestaurantObjectId = new Types.ObjectId(ownerRestaurantId)
 
     const update: Record<string, unknown> = {}
     if (typeof name === 'string') update.name = name.trim()
@@ -413,14 +432,14 @@ router.patch('/items/:itemId', authenticateOwner, upload.single('image'), async 
     if (Array.isArray(rawTags)) update.tags = rawTags
     if (typeof position === 'number' && !Number.isNaN(position)) update.position = position
 
-    const item = await MenuItem.findById(itemId).lean()
+    const item = await MenuItem.findById(itemIdParam).lean()
     if (!item) {
       return res.status(404).json({ message: 'Item not found' })
     }
 
     const category = await MenuCategory.findOne({
       _id: item.categoryId,
-      restaurantId: ownerRestaurantId,
+      restaurantId: ownerRestaurantObjectId,
     }).lean()
     if (!category) {
       return res.status(403).json({ message: 'Forbidden' })
@@ -445,7 +464,7 @@ router.patch('/items/:itemId', authenticateOwner, upload.single('image'), async 
       update.available = availableRaw
     }
 
-    const updatedItem = await MenuItem.findByIdAndUpdate(itemId, update, { new: true }).lean()
+    const updatedItem = await MenuItem.findByIdAndUpdate(itemIdParam, update, { new: true }).lean()
     if (!updatedItem) {
       return res.status(404).json({ message: 'Item not found' })
     }
@@ -460,9 +479,9 @@ router.patch('/items/:itemId', authenticateOwner, upload.single('image'), async 
 
 router.delete('/items/:itemId', authenticateOwner, async (req, res) => {
   try {
-    const { itemId } = req.params
+    const itemIdParam = String(req.params.itemId)
 
-    if (!Types.ObjectId.isValid(itemId)) {
+    if (!Types.ObjectId.isValid(itemIdParam)) {
       return res.status(400).json({ message: 'Invalid itemId' })
     }
 
@@ -470,21 +489,22 @@ router.delete('/items/:itemId', authenticateOwner, async (req, res) => {
     if (!ownerRestaurantId) {
       return res.status(403).json({ message: 'Forbidden' })
     }
+    const ownerRestaurantObjectId = new Types.ObjectId(ownerRestaurantId)
 
-    const item = await MenuItem.findById(itemId).lean()
+    const item = await MenuItem.findById(itemIdParam).lean()
     if (!item) {
       return res.status(404).json({ message: 'Item not found' })
     }
 
     const category = await MenuCategory.findOne({
       _id: item.categoryId,
-      restaurantId: ownerRestaurantId,
+      restaurantId: ownerRestaurantObjectId,
     }).lean()
     if (!category) {
       return res.status(403).json({ message: 'Forbidden' })
     }
 
-    await MenuItem.deleteOne({ _id: itemId })
+    await MenuItem.deleteOne({ _id: new Types.ObjectId(itemIdParam) })
 
     return res.json({ success: true })
   } catch (err) {
