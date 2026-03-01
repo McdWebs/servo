@@ -39,6 +39,8 @@ export interface Restaurant {
   orderLeadTimeMinutes?: number
   aiInstructions?: string
   isSuspended?: boolean
+  printerEnabled?: boolean
+  printerName?: string
 }
 
 export interface CartItem {

@@ -172,6 +172,8 @@ router.patch('/restaurants/:restaurantId', authenticateOwner, async (req, res) =
         ;(update as any).$unset = { ...((update as any).$unset || {}), aiInstructions: 1 }
       }
     }
+    if (typeof body.printerEnabled === 'boolean') update.printerEnabled = body.printerEnabled
+    if (typeof body.printerName === 'string') update.printerName = body.printerName.trim() || undefined
 
     const restaurant = await Restaurant.findByIdAndUpdate(restaurantIdParam, update, {
       new: true,

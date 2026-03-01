@@ -71,6 +71,8 @@ export default function OwnerSettingsPage() {
     allowOrders: true,
     orderLeadTimeMinutes: 15,
     aiInstructions: '',
+    printerEnabled: false,
+    printerName: '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -97,6 +99,8 @@ export default function OwnerSettingsPage() {
         allowOrders: restaurant.allowOrders ?? true,
         orderLeadTimeMinutes: restaurant.orderLeadTimeMinutes ?? 15,
         aiInstructions: restaurant.aiInstructions ?? '',
+        printerEnabled: restaurant.printerEnabled ?? false,
+        printerName: restaurant.printerName ?? '',
       })
     }
   }, [restaurant])
@@ -138,6 +142,8 @@ export default function OwnerSettingsPage() {
       if (typeof form.serviceChargePercent === 'number')
         body.serviceChargePercent = form.serviceChargePercent
       body.aiInstructions = form.aiInstructions.trim()
+      body.printerEnabled = form.printerEnabled
+      body.printerName = form.printerName.trim() || undefined
       const updated = await apiFetch<Restaurant>(`/api/restaurants/${restaurant._id}`, {
         method: 'PATCH',
         token,
@@ -410,6 +416,56 @@ export default function OwnerSettingsPage() {
               />
               <p className="text-[11px] text-slate-500">
                 How many minutes until the order is expected (e.g. 15).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+          <h2 className="text-sm font-semibold text-slate-900">Printer</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Orders are printed from the Kitchen view. The printer is the one connected to the computer where you open the Kitchen page.
+          </p>
+          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-700">
+            <p className="font-medium text-slate-800">How to connect your printer</p>
+            <ol className="mt-1.5 list-decimal list-inside space-y-1 text-slate-600">
+              <li>Open the <strong>Kitchen</strong> page on the computer that is next to (or connected to) your receipt/kitchen printer.</li>
+              <li>On that computer, set your kitchen printer as the <strong>default printer</strong> (in System Settings on Mac, or Settings → Devices → Printers on Windows).</li>
+              <li>When a new order appears, click <strong>Print</strong> on the order card. The browser will use the default printer, or you can pick the printer in the print dialog.</li>
+            </ol>
+            <p className="mt-2 text-slate-500">
+              There is no separate “printer pairing” in this app—the connection is through the computer’s default printer.
+            </p>
+          </div>
+          <div className="mt-4 space-y-3 text-sm">
+            <div className="flex items-center gap-3">
+              <input
+                id="printerEnabled"
+                name="printerEnabled"
+                type="checkbox"
+                checked={form.printerEnabled}
+                onChange={(e) => handleChange('printerEnabled', e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+              />
+              <label htmlFor="printerEnabled" className={labelClass}>
+                Enable order printing (show Print button in Kitchen)
+              </label>
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="printerName" className={labelClass}>
+                Printer name (optional)
+              </label>
+              <input
+                id="printerName"
+                name="printerName"
+                type="text"
+                value={form.printerName}
+                onChange={(e) => handleChange('printerName', e.target.value)}
+                className={inputClass}
+                placeholder="e.g. Kitchen receipt printer"
+              />
+              <p className="text-[11px] text-slate-500">
+                For your reference only—reminds you which printer you set as default on the Kitchen computer.
               </p>
             </div>
           </div>

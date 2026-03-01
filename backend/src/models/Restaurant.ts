@@ -19,6 +19,10 @@ export interface RestaurantDocument extends Document {
   aiInstructions?: string
   /** When true, restaurant is disabled (no menu/orders); super-admin only. */
   isSuspended?: boolean
+  /** When true, order printing is enabled; kitchen can print orders. */
+  printerEnabled?: boolean
+  /** Optional label for the receipt/kitchen printer (for owner reference). */
+  printerName?: string
 }
 
 const restaurantSchema = new Schema<RestaurantDocument>({
@@ -38,6 +42,8 @@ const restaurantSchema = new Schema<RestaurantDocument>({
   orderLeadTimeMinutes: { type: Number, default: 15 },
   aiInstructions: { type: String },
   isSuspended: { type: Boolean, default: false },
+  printerEnabled: { type: Boolean, default: false },
+  printerName: { type: String, trim: true },
 })
 
 export const Restaurant = model<RestaurantDocument>('Restaurant', restaurantSchema)

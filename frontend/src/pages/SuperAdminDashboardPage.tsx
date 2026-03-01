@@ -375,64 +375,66 @@ export default function SuperAdminDashboardPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-4 py-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-sm font-semibold text-slate-900">Restaurants</h2>
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 bg-slate-50/80 px-5 py-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-baseline gap-2">
+                <h2 className="text-base font-semibold text-slate-900">Restaurants</h2>
+                <span className="text-sm text-slate-500">{total} total</span>
+              </div>
               <input
                 type="search"
                 placeholder="Search by name or slug…"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="max-w-xs rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-400 sm:max-w-xs"
               />
-              <span className="text-xs text-slate-500">{total} total</span>
             </div>
           </div>
           <div className="overflow-x-auto">
             {loading ? (
-              <div className="px-4 py-8 text-center text-sm text-slate-500">Loading…</div>
+              <div className="px-5 py-12 text-center text-sm text-slate-500">Loading…</div>
             ) : list.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-slate-500">
+              <div className="px-5 py-12 text-center text-sm text-slate-500">
                 No restaurants found.
               </div>
             ) : (
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium text-slate-600">
-                    <th className="px-4 py-2">Name</th>
-                    <th className="px-4 py-2">Slug</th>
-                    <th className="px-4 py-2">Owner</th>
-                    <th className="px-4 py-2">Status</th>
-                    <th className="px-4 py-2 text-right">Actions</th>
+                  <tr className="border-b border-slate-200 bg-slate-50/60 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                    <th className="px-5 py-3">Name</th>
+                    <th className="px-5 py-3">Slug</th>
+                    <th className="px-5 py-3">Owner</th>
+                    <th className="px-5 py-3">Status</th>
+                    <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {list.map(({ restaurant, ownerEmail }) => (
                     <tr
                       key={restaurant._id}
-                      className="border-b border-slate-100 hover:bg-slate-50/50"
+                      className="border-b border-slate-100 transition-colors hover:bg-slate-50/70"
                     >
-                      <td className="px-4 py-2 font-medium text-slate-900">{restaurant.name}</td>
-                      <td className="px-4 py-2 text-slate-600">{restaurant.slug}</td>
-                      <td className="px-4 py-2 text-slate-600">{ownerEmail ?? '—'}</td>
-                      <td className="px-4 py-2">
+                      <td className="px-5 py-3 font-medium text-slate-900">{restaurant.name}</td>
+                      <td className="px-5 py-3 font-mono text-xs text-slate-600">{restaurant.slug}</td>
+                      <td className="px-5 py-3 text-slate-600">{ownerEmail ?? '—'}</td>
+                      <td className="px-5 py-3">
                         <span
                           className={
                             restaurant.isSuspended
-                              ? 'rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800'
-                              : 'rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800'
+                              ? 'inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800'
+                              : 'inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800'
                           }
                         >
                           {restaurant.isSuspended ? 'Suspended' : 'Active'}
                         </span>
                       </td>
-                      <td className="px-4 py-2 text-right">
-                        <div className="flex flex-wrap justify-end gap-1">
+                      <td className="px-5 py-3 text-right">
+                        <div className="flex flex-wrap justify-end gap-2">
                           <button
                             type="button"
                             onClick={() => openEdit(restaurant._id)}
-                            className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
+                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:border-slate-300"
                           >
                             Edit
                           </button>
@@ -441,14 +443,14 @@ export default function SuperAdminDashboardPage() {
                             onClick={() =>
                               toggleSuspend(restaurant._id, !restaurant.isSuspended)
                             }
-                            className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
+                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:border-slate-300"
                           >
                             {restaurant.isSuspended ? 'Resume' : 'Suspend'}
                           </button>
                           <button
                             type="button"
                             onClick={() => setDeleteId(restaurant._id)}
-                            className="rounded bg-rose-100 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-200"
+                            className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-100 hover:border-rose-300"
                           >
                             Delete
                           </button>
@@ -456,7 +458,7 @@ export default function SuperAdminDashboardPage() {
                             href={`${baseUrl}/restaurant/${restaurant.slug}/menu`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
+                            className="inline-flex rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900"
                           >
                             Guest menu
                           </a>
@@ -464,7 +466,7 @@ export default function SuperAdminDashboardPage() {
                             href={`${baseUrl}/kitchen/${restaurant._id}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
+                            className="inline-flex rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900"
                           >
                             Kitchen
                           </a>

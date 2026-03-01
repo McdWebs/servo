@@ -4,7 +4,7 @@ super admin - √
 
 feedback / bug report - √
 
-connection to printers
+connection to printers - √
 
 upload images to s3
 
