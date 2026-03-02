@@ -77,6 +77,7 @@ export default function OwnerSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   useEffect(() => {
     if (restaurant) {
@@ -173,8 +174,64 @@ export default function OwnerSettingsPage() {
     'w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400'
   const labelClass = 'text-xs font-medium text-slate-700'
 
+  const isPristine =
+    form.name.trim() === restaurant.name &&
+    (form.description ?? '').trim() === (restaurant.description ?? '') &&
+    (form.restaurantType ?? '') === (restaurant.restaurantType ?? '') &&
+    form.currency === (restaurant.currency ?? 'USD') &&
+    (form.address ?? '') === (restaurant.address ?? '') &&
+    (form.phone ?? '') === (restaurant.phone ?? '') &&
+    (form.contactEmail ?? '') === (restaurant.contactEmail ?? '') &&
+    (form.timezone ?? 'UTC') === (restaurant.timezone ?? 'UTC') &&
+    (form.openingHoursNote ?? '') === (restaurant.openingHoursNote ?? '') &&
+    form.allowOrders === (restaurant.allowOrders ?? true) &&
+    form.orderLeadTimeMinutes === (restaurant.orderLeadTimeMinutes ?? 15) &&
+    form.taxRatePercent ===
+      (restaurant.taxRatePercent != null ? restaurant.taxRatePercent : '') &&
+    form.serviceChargePercent ===
+      (restaurant.serviceChargePercent != null ? restaurant.serviceChargePercent : '') &&
+    (form.aiInstructions ?? '').trim() === (restaurant.aiInstructions ?? '').trim() &&
+    form.printerEnabled === (restaurant.printerEnabled ?? false) &&
+    (form.printerName ?? '') === (restaurant.printerName ?? '')
+
   return (
     <div className="space-y-4">
+      {/* Page header */}
+      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-base font-semibold tracking-tight text-slate-900">
+              Owner settings
+            </h1>
+            <p className="mt-1 text-xs text-slate-500">
+              Tidy up how your restaurant looks to guests and how orders flow.
+            </p>
+          </div>
+          <div className="hidden items-center gap-3 text-xs text-slate-600 sm:flex">
+            <div className="rounded-full bg-slate-50 px-3 py-1">
+              <span className="font-medium text-slate-800">
+                {restaurant.name ?? 'Restaurant'}
+              </span>
+            </div>
+            <div className="rounded-full bg-slate-50 px-3 py-1">
+              Currency:{' '}
+              <span className="font-medium text-slate-800">{form.currency}</span>
+            </div>
+            <div
+              className={`flex items-center gap-1 rounded-full px-3 py-1 ${
+                form.allowOrders
+                  ? 'bg-emerald-50 text-emerald-800'
+                  : 'bg-slate-100 text-slate-700'
+              }`}
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-current" />
+              <span>{form.allowOrders ? 'Orders on' : 'Orders off'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile account card */}
       <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 sm:hidden">
         <h2 className="text-sm font-semibold text-slate-900">Account</h2>
         <p className="mt-1 text-xs text-slate-500">
@@ -197,305 +254,348 @@ export default function OwnerSettingsPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">Restaurant details</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Basic information shown to guests.
-          </p>
-          <div className="mt-4 space-y-3 text-sm">
-            <div className="space-y-1">
-              <label htmlFor="name" className={labelClass}>
-                Restaurant name
-              </label>
-              <input
-                id="name"
-                name="name"
-                value={form.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                className={inputClass}
-                placeholder="Restaurant name"
-              />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="description" className={labelClass}>
-                Short description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={form.description}
-                onChange={(e) => handleChange('description', e.target.value)}
-                className="min-h-[80px] w-full resize-y rounded-2xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-                placeholder="e.g. Cozy Italian bistro in the heart of the city"
-                rows={3}
-              />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="restaurantType" className={labelClass}>
-                Type of restaurant
-              </label>
-              <select
-                id="restaurantType"
-                name="restaurantType"
-                value={form.restaurantType}
-                onChange={(e) => handleChange('restaurantType', e.target.value)}
-                className={inputClass}
-              >
-                {RESTAURANT_TYPES.map((t) => (
-                  <option key={t.value || 'blank'} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="currency" className={labelClass}>
-                Currency
-              </label>
-              <select
-                id="currency"
-                name="currency"
-                value={form.currency}
-                onChange={(e) => handleChange('currency', e.target.value)}
-                className={inputClass}
-              >
-                {CURRENCIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">Contact</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Address and contact details for your restaurant.
-          </p>
-          <div className="mt-4 space-y-3 text-sm">
-            <div className="space-y-1">
-              <label htmlFor="address" className={labelClass}>
-                Address
-              </label>
-              <input
-                id="address"
-                name="address"
-                value={form.address}
-                onChange={(e) => handleChange('address', e.target.value)}
-                className={inputClass}
-                placeholder="Street, city, postal code"
-              />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="phone" className={labelClass}>
-                Phone
-              </label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={form.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                className={inputClass}
-                placeholder="+1 234 567 8900"
-              />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="contactEmail" className={labelClass}>
-                Contact email
-              </label>
-              <input
-                id="contactEmail"
-                name="contactEmail"
-                type="email"
-                value={form.contactEmail}
-                onChange={(e) => handleChange('contactEmail', e.target.value)}
-                className={inputClass}
-                placeholder="contact@restaurant.com"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">Opening hours</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Timezone and when you&apos;re open. Pick a preset or type your own.
-          </p>
-          <div className="mt-4 space-y-3 text-sm">
-            <div className="space-y-1">
-              <label htmlFor="timezone" className={labelClass}>
-                Timezone
-              </label>
-              <select
-                id="timezone"
-                name="timezone"
-                value={form.timezone}
-                onChange={(e) => handleChange('timezone', e.target.value)}
-                className={inputClass}
-              >
-                {TIMEZONES.map((tz) => (
-                  <option key={tz} value={tz}>
-                    {tz}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className={labelClass}>Quick pick</label>
-              <div className="flex flex-wrap gap-2">
-                {OPENING_HOURS_PRESETS.map((preset) => (
-                  <button
-                    key={preset.value}
-                    type="button"
-                    onClick={() => handleChange('openingHoursNote', preset.value)}
-                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                      form.openingHoursNote === preset.value
-                        ? 'border-slate-800 bg-slate-800 text-white'
-                        : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'
-                    }`}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)] items-start">
+        {/* Main settings form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:py-4">
+            <h2 className="text-sm font-semibold text-slate-900">Restaurant details</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Basic information shown to guests.
+            </p>
+            <div className="mt-3 space-y-3 text-sm">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-1">
+                  <label htmlFor="name" className={labelClass}>
+                    Restaurant name
+                  </label>
+                  <input
+                    id="name"
+                    name="name"
+                    value={form.name}
+                    onChange={(e) => handleChange('name', e.target.value)}
+                    className={inputClass}
+                    placeholder="Restaurant name"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="restaurantType" className={labelClass}>
+                    Type of restaurant
+                  </label>
+                  <select
+                    id="restaurantType"
+                    name="restaurantType"
+                    value={form.restaurantType}
+                    onChange={(e) => handleChange('restaurantType', e.target.value)}
+                  className={inputClass}
                   >
-                    {preset.label}
-                  </button>
-                ))}
+                    {RESTAURANT_TYPES.map((t) => (
+                      <option key={t.value || 'blank'} value={t.value}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="currency" className={labelClass}>
+                    Currency
+                  </label>
+                  <select
+                    id="currency"
+                    name="currency"
+                    value={form.currency}
+                    onChange={(e) => handleChange('currency', e.target.value)}
+                  className={inputClass}
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="description" className={labelClass}>
+                  Short description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={form.description}
+                  onChange={(e) => handleChange('description', e.target.value)}
+                  className="min-h-[72px] w-full resize-y rounded-2xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                  placeholder="e.g. Cozy Italian bistro in the heart of the city"
+                  rows={3}
+                />
               </div>
             </div>
-            <div className="space-y-1">
-              <label htmlFor="openingHoursNote" className={labelClass}>
-                Opening hours (edit or type your own)
-              </label>
-              <input
-                id="openingHoursNote"
-                name="openingHoursNote"
-                value={form.openingHoursNote}
-                onChange={(e) => handleChange('openingHoursNote', e.target.value)}
-                className={inputClass}
-                placeholder="e.g. Mon–Fri 11:00–22:00, Sat–Sun 10:00–23:00"
-              />
-            </div>
           </div>
-        </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">Orders</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Control whether guests can place orders and default lead time.
-          </p>
-          <div className="mt-4 space-y-3 text-sm">
-            <div className="flex items-center gap-3">
-              <input
-                id="allowOrders"
-                name="allowOrders"
-                type="checkbox"
-                checked={form.allowOrders}
-                onChange={(e) => handleChange('allowOrders', e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
-              />
-              <label htmlFor="allowOrders" className={labelClass}>
-                Accept orders from the menu
-              </label>
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="orderLeadTimeMinutes" className={labelClass}>
-                Default order lead time (minutes)
-              </label>
-              <input
-                id="orderLeadTimeMinutes"
-                name="orderLeadTimeMinutes"
-                type="number"
-                min={0}
-                max={120}
-                value={form.orderLeadTimeMinutes}
-                onChange={(e) =>
-                  handleChange('orderLeadTimeMinutes', parseInt(e.target.value, 10) || 0)
-                }
-                className={inputClass}
-              />
-              <p className="text-[11px] text-slate-500">
-                How many minutes until the order is expected (e.g. 15).
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">Printer</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Orders are printed from the Kitchen view. The printer is the one connected to the computer where you open the Kitchen page.
-          </p>
-          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-700">
-            <p className="font-medium text-slate-800">How to connect your printer</p>
-            <ol className="mt-1.5 list-decimal list-inside space-y-1 text-slate-600">
-              <li>Open the <strong>Kitchen</strong> page on the computer that is next to (or connected to) your receipt/kitchen printer.</li>
-              <li>On that computer, set your kitchen printer as the <strong>default printer</strong> (in System Settings on Mac, or Settings → Devices → Printers on Windows).</li>
-              <li>When a new order appears, click <strong>Print</strong> on the order card. The browser will use the default printer, or you can pick the printer in the print dialog.</li>
-            </ol>
-            <p className="mt-2 text-slate-500">
-              There is no separate “printer pairing” in this app—the connection is through the computer’s default printer.
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:py-4">
+            <h2 className="text-sm font-semibold text-slate-900">Contact</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Address and contact details for your restaurant.
             </p>
-          </div>
-          <div className="mt-4 space-y-3 text-sm">
-            <div className="flex items-center gap-3">
-              <input
-                id="printerEnabled"
-                name="printerEnabled"
-                type="checkbox"
-                checked={form.printerEnabled}
-                onChange={(e) => handleChange('printerEnabled', e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
-              />
-              <label htmlFor="printerEnabled" className={labelClass}>
-                Enable order printing (show Print button in Kitchen)
-              </label>
+            <div className="mt-3 space-y-3 text-sm">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <label htmlFor="address" className={labelClass}>
+                    Address
+                  </label>
+                  <input
+                    id="address"
+                    name="address"
+                    value={form.address}
+                    onChange={(e) => handleChange('address', e.target.value)}
+                    className={inputClass}
+                    placeholder="Street, city, postal code"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="phone" className={labelClass}>
+                    Phone
+                  </label>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => handleChange('phone', e.target.value)}
+                    className={inputClass}
+                    placeholder="+1 234 567 8900"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1 sm:max-w-sm">
+                <label htmlFor="contactEmail" className={labelClass}>
+                  Contact email
+                </label>
+                <input
+                  id="contactEmail"
+                  name="contactEmail"
+                  type="email"
+                  value={form.contactEmail}
+                  onChange={(e) => handleChange('contactEmail', e.target.value)}
+                  className={inputClass}
+                  placeholder="contact@restaurant.com"
+                />
+              </div>
             </div>
-            <div className="space-y-1">
-              <label htmlFor="printerName" className={labelClass}>
-                Printer name (optional)
-              </label>
-              <input
-                id="printerName"
-                name="printerName"
-                type="text"
-                value={form.printerName}
-                onChange={(e) => handleChange('printerName', e.target.value)}
-                className={inputClass}
-                placeholder="e.g. Kitchen receipt printer"
-              />
-              <p className="text-[11px] text-slate-500">
-                For your reference only—reminds you which printer you set as default on the Kitchen computer.
-              </p>
-            </div>
           </div>
-        </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">AI waiter instructions</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Customize how the AI behaves: tone, what to emphasize, or extra rules. Leave blank to use defaults.
-          </p>
-          <div className="mt-4 space-y-1">
-            <label htmlFor="aiInstructions" className={labelClass}>
-              Custom instructions
-            </label>
-            <textarea
-              id="aiInstructions"
-              name="aiInstructions"
-              value={form.aiInstructions}
-              onChange={(e) => handleChange('aiInstructions', e.target.value)}
-              className="min-h-[100px] w-full resize-y rounded-2xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-              placeholder="e.g. Be casual and brief. Always mention if a dish is gluten-free. Suggest our house special when they're unsure."
-              rows={4}
-            />
-            <p className="text-[11px] text-slate-500">
-              The AI still only answers from the menu; use this to control style and priorities.
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:py-4">
+            <h2 className="text-sm font-semibold text-slate-900">Opening hours</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Timezone and when you&apos;re open. Pick a preset or type your own.
             </p>
+            <div className="mt-3 space-y-3 text-sm">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <label htmlFor="timezone" className={labelClass}>
+                    Timezone
+                  </label>
+                  <select
+                    id="timezone"
+                    name="timezone"
+                    value={form.timezone}
+                    onChange={(e) => handleChange('timezone', e.target.value)}
+                  className={inputClass}
+                  >
+                    {TIMEZONES.map((tz) => (
+                      <option key={tz} value={tz}>
+                        {tz}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="openingHoursNote" className={labelClass}>
+                    Opening hours
+                  </label>
+                  <input
+                    id="openingHoursNote"
+                    name="openingHoursNote"
+                    value={form.openingHoursNote}
+                    onChange={(e) => handleChange('openingHoursNote', e.target.value)}
+                    className={inputClass}
+                    placeholder="e.g. Mon–Fri 11:00–22:00, Sat–Sun 10:00–23:00"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className={labelClass}>Quick pick</label>
+                <div className="flex flex-wrap gap-2">
+                  {OPENING_HOURS_PRESETS.map((preset) => (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      onClick={() => handleChange('openingHoursNote', preset.value)}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                        form.openingHoursNote === preset.value
+                          ? 'border-slate-800 bg-slate-800 text-white'
+                          : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Tax & service charge – commented out for now
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+            <h2 className="text-sm font-semibold text-slate-900">Orders</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Control whether guests can place orders and default lead time.
+            </p>
+            <div className="mt-4 space-y-3 text-sm">
+              <div className="flex items-center gap-3">
+                <input
+                  id="allowOrders"
+                  name="allowOrders"
+                  type="checkbox"
+                  checked={form.allowOrders}
+                  onChange={(e) => handleChange('allowOrders', e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                />
+                <label htmlFor="allowOrders" className={labelClass}>
+                  Accept orders from the menu
+                </label>
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="orderLeadTimeMinutes" className={labelClass}>
+                  Default order lead time (minutes)
+                </label>
+                <input
+                  id="orderLeadTimeMinutes"
+                  name="orderLeadTimeMinutes"
+                  type="number"
+                  min={0}
+                  max={120}
+                  value={form.orderLeadTimeMinutes}
+                  onChange={(e) =>
+                    handleChange('orderLeadTimeMinutes', parseInt(e.target.value, 10) || 0)
+                  }
+                  className={inputClass}
+                />
+                <p className="text-[11px] text-slate-500">
+                  How many minutes until the order is expected (e.g. 15).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-900">Advanced settings</h2>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Printer and AI behavior. You can leave these as they are.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-slate-800"
+                onClick={() => setShowAdvanced((prev) => !prev)}
+              >
+                {showAdvanced ? 'Hide advanced' : 'Show advanced'}
+              </button>
+            </div>
+          </div>
+
+          {showAdvanced && (
+            <>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <h2 className="text-sm font-semibold text-slate-900">Printer</h2>
+                <details className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-700">
+                  <summary className="cursor-pointer list-none font-medium text-slate-800">
+                    How to connect your printer
+                  </summary>
+                  <ol className="mt-1.5 list-decimal list-inside space-y-1 text-slate-600">
+                    <li>
+                      Open the <strong>Kitchen</strong> page on the computer that is next to (or
+                      connected to) your receipt/kitchen printer.
+                    </li>
+                    <li>
+                      On that computer, set your kitchen printer as the <strong>default printer</strong>{' '}
+                      (in System Settings on Mac, or Settings → Devices → Printers on Windows).
+                    </li>
+                    <li>
+                      When a new order appears, click <strong>Print</strong> on the order card. The
+                      browser will use the default printer, or you can pick the printer in the print
+                      dialog.
+                    </li>
+                  </ol>
+                  <p className="mt-2 text-slate-500">
+                    There is no separate “printer pairing” in this app—the connection is through the
+                    computer’s default printer.
+                  </p>
+                </details>
+                <div className="mt-4 space-y-3 text-sm">
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="printerEnabled"
+                      name="printerEnabled"
+                      type="checkbox"
+                      checked={form.printerEnabled}
+                      onChange={(e) => handleChange('printerEnabled', e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                    />
+                    <label htmlFor="printerEnabled" className={labelClass}>
+                      Enable order printing (show Print button in Kitchen)
+                    </label>
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="printerName" className={labelClass}>
+                      Printer name (optional)
+                    </label>
+                    <input
+                      id="printerName"
+                      name="printerName"
+                      type="text"
+                      value={form.printerName}
+                      onChange={(e) => handleChange('printerName', e.target.value)}
+                      className={inputClass}
+                      placeholder="e.g. Kitchen receipt printer"
+                    />
+                    <p className="text-[11px] text-slate-500">
+                      For your reference only—reminds you which printer you set as default on the
+                      Kitchen computer.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <h2 className="text-sm font-semibold text-slate-900">AI waiter instructions</h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  Customize how the AI behaves: tone, what to emphasize, or extra rules. Leave blank
+                  to use defaults.
+                </p>
+                <div className="mt-4 space-y-1">
+                  <label htmlFor="aiInstructions" className={labelClass}>
+                    Custom instructions
+                  </label>
+                  <textarea
+                    id="aiInstructions"
+                    name="aiInstructions"
+                    value={form.aiInstructions}
+                    onChange={(e) => handleChange('aiInstructions', e.target.value)}
+                    className="min-h-[100px] w-full resize-y rounded-2xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                    placeholder="e.g. Be casual and brief. Always mention if a dish is gluten-free. Suggest our house special when they're unsure."
+                    rows={4}
+                  />
+                  <p className="text-[11px] text-slate-500">
+                    The AI still only answers from the menu; use this to control style and
+                    priorities.
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Tax & service charge – commented out for now
         <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
           <h2 className="text-sm font-semibold text-slate-900">Tax & service charge</h2>
           <p className="mt-1 text-xs text-slate-500">
@@ -546,45 +646,69 @@ export default function OwnerSettingsPage() {
         </div>
         */}
 
-        {error && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-            {error}
+          {error && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+              {success}
+            </div>
+          )}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+              disabled={saving || isPristine}
+            >
+              {saving ? 'Saving…' : 'Save all settings'}
+            </button>
           </div>
-        )}
-        {success && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-            {success}
-          </div>
-        )}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
-            disabled={saving}
-          >
-            {saving ? 'Saving…' : 'Save all settings'}
-          </button>
-        </div>
-      </form>
+        </form>
 
-      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm">
-        <h2 className="text-sm font-semibold text-slate-900">Public menu link</h2>
-        <p className="mt-1 text-xs text-slate-500">
-          Share this link with your guests so they can view the menu and order from their
-          table.
-        </p>
-        <div className="mt-3 flex items-center gap-2 text-xs">
-          <code className="flex-1 truncate rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-slate-800">
-            {publicUrl}
-          </code>
-          <button
-            type="button"
-            className="rounded-full bg-slate-900 px-3 py-2 text-[11px] font-semibold text-white hover:bg-slate-800"
-            onClick={handleCopyLink}
-          >
-            Copy link
-          </button>
-        </div>
+        {/* Sidebar: account (desktop) + public link */}
+        <aside className="space-y-4">
+          <div className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm sm:block">
+            <h2 className="text-sm font-semibold text-slate-900">Account</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              You are signed in as:
+            </p>
+            <p className="mt-2 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+              {owner?.email ?? '—'}
+            </p>
+            <button
+              type="button"
+              className="mt-3 w-full rounded-full bg-slate-800 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-700"
+              onClick={() => {
+                logout()
+                navigate('/owner/login', { replace: true })
+              }}
+            >
+              Sign out
+            </button>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm">
+            <h2 className="text-sm font-semibold text-slate-900">Public menu link</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Share this link with your guests so they can view the menu and order from their
+              table.
+            </p>
+            <div className="mt-3 flex items-center gap-2 text-xs">
+              <code className="flex-1 truncate rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-slate-800">
+                {publicUrl}
+              </code>
+              <button
+                type="button"
+                className="rounded-full bg-slate-900 px-3 py-2 text-[11px] font-semibold text-white hover:bg-slate-800"
+                onClick={handleCopyLink}
+              >
+                Copy link
+              </button>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   )

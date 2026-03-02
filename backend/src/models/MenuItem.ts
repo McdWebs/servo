@@ -10,6 +10,8 @@ export interface MenuItemDocument extends Document {
   position?: number
   imageUrl?: string
   available?: boolean
+  availableFrom?: string
+  availableUntil?: string
 }
 
 const menuItemSchema = new Schema<MenuItemDocument>({
@@ -22,6 +24,8 @@ const menuItemSchema = new Schema<MenuItemDocument>({
   position: { type: Number, default: 0 },
   imageUrl: { type: String },
   available: { type: Boolean, default: true },
+  availableFrom: { type: String },
+  availableUntil: { type: String },
 })
 
 export const MenuItem = model<MenuItemDocument>('MenuItem', menuItemSchema)

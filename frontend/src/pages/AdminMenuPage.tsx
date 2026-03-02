@@ -182,6 +182,32 @@ export default function AdminMenuPage() {
     formData.set('allergens', allergens.join(','))
     formData.set('tags', tags.join(','))
 
+    const availableFromRaw = (formData.get('availableFrom') as string) ?? ''
+    const availableUntilRaw = (formData.get('availableUntil') as string) ?? ''
+
+    const availableFrom = availableFromRaw.trim()
+    const availableUntil = availableUntilRaw.trim()
+
+    if ((availableFrom && !availableUntil) || (!availableFrom && availableUntil)) {
+      // eslint-disable-next-line no-alert
+      alert('If you set a time window, please fill both "from" and "until" times.')
+      return false
+    }
+
+    if (availableFrom && availableUntil && availableFrom >= availableUntil) {
+      // eslint-disable-next-line no-alert
+      alert('"Available until" must be later than "available from".')
+      return false
+    }
+
+    if (availableFrom && availableUntil) {
+      formData.set('availableFrom', availableFrom)
+      formData.set('availableUntil', availableUntil)
+    } else {
+      formData.delete('availableFrom')
+      formData.delete('availableUntil')
+    }
+
     try {
       setSaving(true)
       const res = await fetch(`${API_BASE}/api/categories/${categoryId}/items`, {
@@ -250,6 +276,30 @@ export default function AdminMenuPage() {
     formData.set('price', price.toString())
     formData.set('allergens', allergens.join(','))
     formData.set('tags', tags.join(','))
+
+    const availableFromRaw = (formData.get('availableFrom') as string | null) ?? ''
+    const availableUntilRaw = (formData.get('availableUntil') as string | null) ?? ''
+
+    const availableFrom = availableFromRaw.trim()
+    const availableUntil = availableUntilRaw.trim()
+
+    if (availableFrom || availableUntil) {
+      if (!availableFrom || !availableUntil) {
+        // eslint-disable-next-line no-alert
+        alert('If you set a time window, please fill both "from" and "until" times.')
+        return
+      }
+      if (availableFrom >= availableUntil) {
+        // eslint-disable-next-line no-alert
+        alert('"Available until" must be later than "available from".')
+        return
+      }
+      formData.set('availableFrom', availableFrom)
+      formData.set('availableUntil', availableUntil)
+    } else {
+      formData.delete('availableFrom')
+      formData.delete('availableUntil')
+    }
 
     const removeImageRaw = formData.get('removeImage') as string | null
     if (removeImageRaw === 'on' || removeImageRaw === 'true' || removeImageRaw === '1') {
@@ -555,7 +605,7 @@ export default function AdminMenuPage() {
           {data.categories.map((category, catIndex) => (
             <div
               key={category._id}
-              className={`rounded-2xl border bg-white p-3 shadow-sm sm:p-4 ${
+              className={`group rounded-3xl border bg-white/95 p-4 shadow-sm ring-1 ring-transparent transition hover:border-emerald-200 hover:shadow-md hover:ring-emerald-50 sm:p-5 ${
                 dragCategoryIndex === catIndex
                   ? 'border-emerald-400 ring-1 ring-emerald-300'
                   : 'border-slate-200'
@@ -590,8 +640,12 @@ export default function AdminMenuPage() {
               }}
               onDragEnd={() => setDragCategoryIndex(null)}
             >
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-2">
+              {/* Category header */}
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                <div className="flex flex-1 flex-wrap items-center gap-3">
+                  <div className="hidden h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-xs font-semibold text-emerald-700 sm:flex">
+                    {category.name?.[0]?.toUpperCase()}
+                  </div>
                   {editingCategoryId === category._id ? (
                     <>
                       <input
@@ -623,30 +677,33 @@ export default function AdminMenuPage() {
                       </button>
                     </>
                   ) : (
-                    <>
-                      <h2 className="text-sm font-semibold text-slate-900">{category.name}</h2>
-                      <span className="text-[10px] text-slate-400">
-                        {category.items?.length ?? 0} items
-                      </span>
+                    <div className="flex flex-col gap-1">
+                      <h2 className="text-sm font-semibold tracking-tight text-slate-900">
+                        {category.name}
+                      </h2>
                       <button
                         type="button"
-                        className="min-h-[36px] touch-manipulation rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[10px] text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+                        className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-800"
                         disabled={saving}
                         onClick={() => {
                           setEditingCategoryId(category._id)
                           setEditingCategoryName(category.name)
                         }}
                       >
-                        Rename
+                        <span className="h-4 w-4 rounded-full bg-slate-100 text-[9px] leading-4 text-slate-500">
+                          ✎
+                        </span>
+                        Rename category
                       </button>
-                    </>
+                    </div>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-1">
+                <div className="flex flex-wrap items-center justify-end gap-2">
                   <button
                     type="button"
                     className="min-h-[36px] min-w-[36px] touch-manipulation rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] text-slate-700 disabled:opacity-40"
                     disabled={catIndex === 0 || saving}
+                    title="Move category up"
                     onClick={() => {
                       if (saving || !data || catIndex === 0) return
                       const categories = [...data.categories]
@@ -662,6 +719,7 @@ export default function AdminMenuPage() {
                     type="button"
                     className="min-h-[36px] min-w-[36px] touch-manipulation rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] text-slate-700 disabled:opacity-40"
                     disabled={catIndex === data.categories.length - 1 || saving}
+                    title="Move category down"
                     onClick={() => {
                       if (saving || !data || catIndex === data.categories.length - 1) return
                       const categories = [...data.categories]
@@ -675,7 +733,7 @@ export default function AdminMenuPage() {
                   </button>
                   <button
                     type="button"
-                    className="min-h-[36px] touch-manipulation rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[10px] font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-60"
+                    className="min-h-[36px] touch-manipulation rounded-full bg-emerald-600 px-3 py-1.5 text-[10px] font-medium text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
                     disabled={saving}
                     onClick={() =>
                       setAddingItemForCategory({
@@ -703,203 +761,234 @@ export default function AdminMenuPage() {
                 </div>
               </div>
 
-              <div className="mb-3 space-y-2 text-xs">
+              {/* Items list */}
+              <div className="text-xs">
                 {category.items && category.items.length > 0 ? (
-                  category.items.map((item, itemIndex) => (
-                    <div
-                      key={item._id}
-                      className={`flex flex-col gap-3 rounded-xl border bg-white/80 px-3 py-3 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:justify-between touch-manipulation ${
-                        dragItemState &&
-                        dragItemState.categoryId === category._id &&
-                        dragItemState.index === itemIndex
-                          ? 'border-emerald-400 ring-1 ring-emerald-300'
-                          : 'border-slate-200'
-                      } ${
-                        item.available === false ? 'opacity-60 grayscale' : ''
-                      }`}
-                      draggable
-                      onDragStart={(e) => {
-                        if (saving) return
-                        e.dataTransfer.effectAllowed = 'move'
-                        setDragItemState({ categoryId: category._id, index: itemIndex })
-                      }}
-                      onDragOver={(e) => {
-                        if (
-                          !dragItemState ||
-                          dragItemState.categoryId !== category._id ||
-                          dragItemState.index === itemIndex
-                        ) {
-                          return
-                        }
-                        e.preventDefault()
-                        handleAutoScroll(e.clientY)
-                        setData((prev) => {
-                          if (!prev) return prev
-                          const categories = prev.categories.map((cat) => {
-                            if (cat._id !== category._id || !cat.items) return cat
-                            const items = [...cat.items]
-                            const moved = items.splice(dragItemState.index, 1)[0]
-                            items.splice(itemIndex, 0, moved)
-                            return { ...cat, items }
-                          })
-                          return { ...prev, categories }
-                        })
-                        setDragItemState({ categoryId: category._id, index: itemIndex })
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault()
-                        if (
-                          dragItemState &&
-                          dragItemState.categoryId === category._id &&
-                          !saving
-                        ) {
-                          const updatedCategory = data.categories.find(
-                            (c) => c._id === category._id
-                          )
-                          if (updatedCategory && updatedCategory.items) {
-                            void reorderItems(category._id, updatedCategory.items)
-                          }
-                        }
-                        setDragItemState(null)
-                      }}
-                      onDragEnd={() => setDragItemState(null)}
-                    >
-                      <div className="flex flex-1 gap-3">
-                        {item.imageUrl && (
-                          <div className="hidden h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 sm:block">
-                            <img
-                              src={item.imageUrl}
-                              alt={item.name}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="min-w-0 space-y-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="truncate text-xs font-semibold text-slate-900">
-                                {item.name}
+                  <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/60">
+                    <div className="divide-y divide-slate-100">
+                      {category.items.map((item, itemIndex) => (
+                        <div
+                          key={item._id}
+                          className={`flex flex-col gap-3 bg-white/95 px-3 py-3 transition hover:bg-emerald-50/40 sm:grid sm:grid-cols-[minmax(0,1.7fr)_minmax(0,1.2fr)_auto] sm:items-center sm:gap-3 touch-manipulation ${
+                            dragItemState &&
+                            dragItemState.categoryId === category._id &&
+                            dragItemState.index === itemIndex
+                              ? 'ring-1 ring-emerald-300'
+                              : ''
+                          } ${item.available === false ? 'opacity-75' : ''}`}
+                          draggable
+                          onDragStart={(e) => {
+                            if (saving) return
+                            e.dataTransfer.effectAllowed = 'move'
+                            setDragItemState({ categoryId: category._id, index: itemIndex })
+                          }}
+                          onDragOver={(e) => {
+                            if (
+                              !dragItemState ||
+                              dragItemState.categoryId !== category._id ||
+                              dragItemState.index === itemIndex
+                            ) {
+                              return
+                            }
+                            e.preventDefault()
+                            handleAutoScroll(e.clientY)
+                            setData((prev) => {
+                              if (!prev) return prev
+                              const categories = prev.categories.map((cat) => {
+                                if (cat._id !== category._id || !cat.items) return cat
+                                const items = [...cat.items]
+                                const moved = items.splice(dragItemState.index, 1)[0]
+                                items.splice(itemIndex, 0, moved)
+                                return { ...cat, items }
+                              })
+                              return { ...prev, categories }
+                            })
+                            setDragItemState({ categoryId: category._id, index: itemIndex })
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault()
+                            if (
+                              dragItemState &&
+                              dragItemState.categoryId === category._id &&
+                              !saving
+                            ) {
+                              const updatedCategory = data.categories.find(
+                                (c) => c._id === category._id
+                              )
+                              if (updatedCategory && updatedCategory.items) {
+                                void reorderItems(category._id, updatedCategory.items)
+                              }
+                            }
+                            setDragItemState(null)
+                          }}
+                          onDragEnd={() => setDragItemState(null)}
+                        >
+                          {/* Item info */}
+                          <div className="flex items-start gap-3">
+                            <div className="mt-1 hidden h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-[9px] text-slate-400 sm:flex">
+                              ⋮⋮
+                            </div>
+                            {item.imageUrl && (
+                              <div className="hidden h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100 sm:block">
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.name}
+                                  className="h-full w-full object-cover"
+                                />
                               </div>
-                              <div className="mt-0.5 line-clamp-2 text-[11px] text-slate-500">
-                                {item.description}
+                            )}
+                            <div className="min-w-0 space-y-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <div className="truncate text-xs font-semibold text-slate-900">
+                                    {item.name}
+                                  </div>
+                                  <div className="mt-0.5 line-clamp-2 text-[11px] text-slate-500">
+                                    {item.description}
+                                  </div>
+                                </div>
+                                <div className="hidden items-center gap-1 sm:flex">
+                                  <span
+                                    className={`h-2 w-2 rounded-full ${
+                                      item.available === false ? 'bg-rose-400' : 'bg-emerald-400'
+                                    }`}
+                                  />
+                                  <span className="text-[10px] text-slate-500">
+                                    {item.available === false ? 'Unavailable' : 'Available'}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
-                          {(item.tags?.length ?? 0) > 0 || (item.allergens?.length ?? 0) > 0 ? (
-                            <div className="mt-1 flex flex-wrap gap-1">
-                              {item.tags?.map((tag) => (
-                                <span
-                                  key={tag}
-                                  className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                              {item.allergens?.map((allergen) => (
-                                <span
-                                  key={allergen}
-                                  className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700"
-                                >
-                                  {allergen}
-                                </span>
-                              ))}
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
-                      <div className="mt-1 flex items-end justify-between gap-3 sm:mt-0 sm:flex-col sm:items-end sm:justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1 rounded-full bg-slate-900/5 px-2 py-1 text-[11px] font-medium text-slate-900">
-                            <span>{currencySymbol}</span>
-                            <span>{item.price.toFixed(2)}</span>
+
+                          {/* Tags & allergens */}
+                          <div className="flex flex-wrap gap-1">
+                            {(item.tags?.length ?? 0) > 0 || (item.allergens?.length ?? 0) > 0 ? (
+                              <>
+                                {item.tags?.map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                                {item.allergens?.map((allergen) => (
+                                  <span
+                                    key={allergen}
+                                    className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700"
+                                  >
+                                    {allergen}
+                                  </span>
+                                ))}
+                              </>
+                            ) : (
+                              <span className="text-[10px] text-slate-400">
+                                No tags or allergens set
+                              </span>
+                            )}
                           </div>
-                          <button
-                            type="button"
-                            className={`min-h-[36px] touch-manipulation rounded-full px-3 py-1.5 text-[10px] font-medium ${
-                              item.available === false
-                                ? 'border border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100'
-                                : 'border border-sky-300 bg-sky-50 text-sky-800 hover:bg-sky-100'
-                            } disabled:opacity-60`}
-                            disabled={saving}
-                            onClick={() => {
-                              if (saving) return
-                              const next = !(item.available ?? true)
-                              setSaving(true)
-                              void (async () => {
-                                try {
-                                  const res = await fetch(`${API_BASE}/api/items/${item._id}`, {
-                                    method: 'PATCH',
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                                    },
-                                    body: JSON.stringify({ available: next }),
+
+                          {/* Price & actions */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-white">
+                                <span>{currencySymbol}</span>
+                                <span>{item.price.toFixed(2)}</span>
+                              </div>
+                              <button
+                                type="button"
+                                className={`min-h-[32px] touch-manipulation rounded-full px-3 py-1.5 text-[10px] font-medium ${
+                                  item.available === false
+                                    ? 'border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                                    : 'border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100'
+                                } disabled:opacity-60`}
+                                disabled={saving}
+                                onClick={() => {
+                                  if (saving) return
+                                  const next = !(item.available ?? true)
+                                  setSaving(true)
+                                  void (async () => {
+                                    try {
+                                      const res = await fetch(`${API_BASE}/api/items/${item._id}`, {
+                                        method: 'PATCH',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                                        },
+                                        body: JSON.stringify({ available: next }),
+                                      })
+                                      if (!res.ok) {
+                                        const json = (await res.json()) as { message?: string }
+                                        throw new Error(
+                                          json.message ?? 'Failed to update availability'
+                                        )
+                                      }
+                                      setData((prev) =>
+                                        prev
+                                          ? {
+                                              ...prev,
+                                              categories: prev.categories.map((cat) =>
+                                                cat._id === category._id
+                                                  ? {
+                                                      ...cat,
+                                                      items: cat.items.map((it) =>
+                                                        it._id === item._id
+                                                          ? { ...it, available: next }
+                                                          : it
+                                                      ),
+                                                    }
+                                                  : cat
+                                              ),
+                                            }
+                                          : prev
+                                      )
+                                    } catch (err) {
+                                      // eslint-disable-next-line no-alert
+                                      alert((err as Error).message)
+                                    } finally {
+                                      setSaving(false)
+                                    }
+                                  })()
+                                }}
+                              >
+                                {item.available === false ? 'Mark available' : 'Mark unavailable'}
+                              </button>
+                            </div>
+                            <div className="flex gap-1">
+                              <button
+                                type="button"
+                                className="min-h-[32px] touch-manipulation rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                                disabled={saving}
+                                onClick={() =>
+                                  setEditingItem({
+                                    item,
+                                    categoryId: category._id,
                                   })
-                                  if (!res.ok) {
-                                    const json = (await res.json()) as { message?: string }
-                                    throw new Error(json.message ?? 'Failed to update availability')
-                                  }
-                                  setData((prev) =>
-                                    prev
-                                      ? {
-                                          ...prev,
-                                          categories: prev.categories.map((cat) =>
-                                            cat._id === category._id
-                                              ? {
-                                                  ...cat,
-                                                  items: cat.items.map((it) =>
-                                                    it._id === item._id ? { ...it, available: next } : it
-                                                  ),
-                                                }
-                                              : cat
-                                          ),
-                                        }
-                                      : prev
-                                  )
-                                } catch (err) {
-                                  // eslint-disable-next-line no-alert
-                                  alert((err as Error).message)
-                                } finally {
-                                  setSaving(false)
                                 }
-                              })()
-                            }}
-                          >
-                            {item.available === false ? 'Mark available' : 'Mark unavailable'}
-                          </button>
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                className="min-h-[32px] touch-manipulation rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[10px] font-medium text-rose-700 hover:bg-rose-100"
+                                disabled={saving}
+                                onClick={() =>
+                                  setPendingDelete({
+                                    type: 'item',
+                                    id: item._id,
+                                    name: item.name,
+                                  })
+                                }
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex gap-1">
-                          <button
-                            type="button"
-                            className="min-h-[36px] touch-manipulation rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                            disabled={saving}
-                            onClick={() =>
-                              setEditingItem({
-                                item,
-                                categoryId: category._id,
-                              })
-                            }
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            className="min-h-[36px] touch-manipulation rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[10px] font-medium text-rose-700 hover:bg-rose-100"
-                            disabled={saving}
-                            onClick={() =>
-                              setPendingDelete({
-                                type: 'item',
-                                id: item._id,
-                                name: item.name,
-                              })
-                            }
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))
+                  </div>
                 ) : (
                   <p className="text-[11px] text-slate-500">No items in this category yet.</p>
                 )}
@@ -1044,6 +1133,32 @@ export default function AdminMenuPage() {
                       className="mt-1 w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
                       placeholder="Custom tags (comma separated, optional)"
                     />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[11px] font-medium text-slate-700">
+                      Time-based availability (optional)
+                    </span>
+                    <p className="text-[10px] text-slate-500">
+                      Leave empty to make this item available all day. Times are in your restaurant timezone.
+                    </p>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <div className="flex-1 space-y-1">
+                        <span className="text-[10px] text-slate-600">From</span>
+                        <input
+                          name="availableFrom"
+                          type="time"
+                          className="min-h-[40px] w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <span className="text-[10px] text-slate-600">Until</span>
+                        <input
+                          name="availableUntil"
+                          type="time"
+                          className="min-h-[40px] w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-medium text-slate-700">
@@ -1207,6 +1322,34 @@ export default function AdminMenuPage() {
                       className="mt-1 w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
                       placeholder="Custom tags (comma separated, optional)"
                     />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[11px] font-medium text-slate-700">
+                      Time-based availability (optional)
+                    </span>
+                    <p className="text-[10px] text-slate-500">
+                      Leave empty to make this item available all day. Times are in your restaurant timezone.
+                    </p>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <div className="flex-1 space-y-1">
+                        <span className="text-[10px] text-slate-600">From</span>
+                        <input
+                          name="availableFrom"
+                          type="time"
+                          defaultValue={editingItem.item.availableFrom}
+                          className="min-h-[40px] w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <span className="text-[10px] text-slate-600">Until</span>
+                        <input
+                          name="availableUntil"
+                          type="time"
+                          defaultValue={editingItem.item.availableUntil}
+                          className="min-h-[40px] w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-medium text-slate-700">

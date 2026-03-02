@@ -21,6 +21,50 @@ interface MenuResponse {
   categories: MenuCategory[]
 }
 
+function getCurrentTimeInRestaurantTimezoneHHmm(timezone?: string): string {
+  try {
+    const now = new Date()
+    return new Intl.DateTimeFormat('en-GB', {
+      timeZone: timezone || 'UTC',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(now)
+  } catch {
+    const now = new Date()
+    return now.toISOString().substring(11, 16)
+  }
+}
+
+function filterCategoriesByBusinessHours(
+  categories: MenuCategory[],
+  restaurant: Restaurant
+): MenuCategory[] {
+  const currentHHmm = getCurrentTimeInRestaurantTimezoneHHmm(restaurant.timezone)
+
+  const filtered = categories
+    .map((cat) => ({
+      ...cat,
+      items: cat.items.filter((item) => {
+        const from = item.availableFrom
+        const until = item.availableUntil
+
+        if (!from || !until) {
+          return true
+        }
+
+        if (from >= until) {
+          return true
+        }
+
+        return currentHHmm >= from && currentHHmm <= until
+      }),
+    }))
+    .filter((cat) => cat.items.length > 0)
+
+  return filtered
+}
+
 function getCurrencySymbol(currency?: string) {
   switch ((currency ?? 'USD').toUpperCase()) {
     case 'EUR':
@@ -161,7 +205,7 @@ function MenuPageInner() {
   const currencySymbol = getCurrencySymbol(data.restaurant.currency)
 
   const query = searchQuery.trim().toLowerCase()
-  const filteredCategories = query
+  const searchedCategories = query
     ? data.categories
         .map((cat) => ({
           ...cat,
@@ -174,6 +218,8 @@ function MenuPageInner() {
         }))
         .filter((cat) => cat.items.length > 0)
     : data.categories
+
+  const filteredCategories = filterCategoriesByBusinessHours(searchedCategories, data.restaurant)
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 text-slate-900">

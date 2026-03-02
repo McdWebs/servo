@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../components/AuthContext'
 
 export default function OwnerDashboardLayout() {
-  const { owner, restaurant, logout } = useAuth()
+  const { restaurant, logout } = useAuth()
   const navigate = useNavigate()
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
 
@@ -32,8 +32,8 @@ export default function OwnerDashboardLayout() {
               <span className="mx-1.5 text-slate-300">·</span>
               {restaurant?.name ?? 'Your restaurant'}
             </h1>
-            <div className="flex flex-shrink-0 flex-nowrap items-center gap-1 sm:gap-2">
-              <nav className="flex items-center gap-0.5 rounded-md bg-slate-100/80 p-0.5">
+            <div className="ml-auto flex flex-shrink-0 flex-nowrap items-center gap-1 rounded-full bg-slate-100/70 px-1.5 py-0.5 sm:gap-2">
+              <nav className="flex items-center gap-0.5">
                 <NavLink
                   to="/owner/menu"
                   className={({ isActive }) =>
@@ -104,21 +104,6 @@ export default function OwnerDashboardLayout() {
                   <span className="hidden sm:inline">Kitchen</span>
                 </button>
               )}
-              <div className="hidden items-center gap-1 rounded border border-slate-200 bg-slate-50/80 px-1.5 py-0.5 sm:flex">
-                <span
-                  className="max-w-[100px] truncate text-[11px] text-slate-600 sm:max-w-[140px]"
-                  title={owner?.email ?? ''}
-                >
-                  {owner?.email}
-                </span>
-                <button
-                  type="button"
-                  className="touch-manipulation rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-semibold text-white transition-colors hover:bg-slate-700"
-                  onClick={() => setShowSignOutConfirm(true)}
-                >
-                  Sign out
-                </button>
-              </div>
             </div>
           </div>
         </header>
