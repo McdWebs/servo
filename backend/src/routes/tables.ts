@@ -1,6 +1,7 @@
 import express from 'express'
 import { Types } from 'mongoose'
 import { Table } from '../models/Table'
+import { TableMerge } from '../models/TableMerge'
 
 const router = express.Router()
 
@@ -86,6 +87,105 @@ router.post('/restaurants/:restaurantId/tables', async (req, res) => {
     // eslint-disable-next-line no-console
     console.error(err)
     return res.status(500).json({ message: 'Failed to create table' })
+  }
+})
+
+router.post('/restaurants/:restaurantId/merged-tables', async (req, res) => {
+  try {
+    const { restaurantId } = req.params
+    const { tables } = req.body as { tables?: string[] }
+
+    if (!Types.ObjectId.isValid(restaurantId)) {
+      return res.status(400).json({ message: 'Invalid restaurantId' })
+    }
+
+    const rid = new Types.ObjectId(restaurantId)
+    const uniqueTables = Array.from(
+      new Set(
+        (tables ?? [])
+          .map((t) => (t ?? '').trim())
+          .filter((t) => t.length > 0)
+      )
+    )
+
+    // Always clear previous merges that involve any of these tables
+    if (uniqueTables.length > 0) {
+      await TableMerge.updateMany(
+        {
+          restaurantId: rid,
+          active: true,
+          tables: { $in: uniqueTables },
+        },
+        { $set: { active: false } }
+      )
+    }
+
+    // If fewer than 2 tables are provided, treat this as "unmerge" and return early
+    if (uniqueTables.length < 2) {
+      return res.status(200).json({ merged: null })
+    }
+
+    const merge = await TableMerge.create({
+      restaurantId: rid,
+      tables: uniqueTables,
+      active: true,
+    })
+
+    return res.status(201).json({
+      _id: merge._id,
+      restaurantId: merge.restaurantId,
+      tables: merge.tables,
+      active: merge.active,
+      createdAt: merge.createdAt,
+      updatedAt: merge.updatedAt,
+    })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err)
+    return res.status(500).json({ message: 'Failed to merge tables' })
+  }
+})
+
+router.get('/restaurants/:restaurantId/merged-tables', async (req, res) => {
+  try {
+    const { restaurantId } = req.params
+    const { tableNumber } = req.query as { tableNumber?: string }
+
+    if (!Types.ObjectId.isValid(restaurantId)) {
+      return res.status(400).json({ message: 'Invalid restaurantId' })
+    }
+    const trimmedTable = (tableNumber ?? '').trim()
+    if (!trimmedTable) {
+      return res.status(400).json({ message: 'tableNumber is required' })
+    }
+
+    const rid = new Types.ObjectId(restaurantId)
+    const merge = await TableMerge.findOne({
+      restaurantId: rid,
+      active: true,
+      tables: trimmedTable,
+    })
+      .sort({ createdAt: -1 })
+      .lean()
+
+    if (!merge) {
+      return res.status(200).json({ merged: null })
+    }
+
+    return res.json({
+      merged: {
+        _id: merge._id,
+        restaurantId: merge.restaurantId,
+        tables: merge.tables,
+        active: merge.active,
+        createdAt: merge.createdAt,
+        updatedAt: merge.updatedAt,
+      },
+    })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err)
+    return res.status(500).json({ message: 'Failed to load merged tables' })
   }
 })
 

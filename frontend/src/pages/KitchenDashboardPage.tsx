@@ -64,6 +64,8 @@ export default function KitchenDashboardPage() {
   const [historyFrom, setHistoryFrom] = useState<string>('')
   const [historyTo, setHistoryTo] = useState<string>('')
   const [collapsedTables, setCollapsedTables] = useState<Set<string>>(new Set())
+  const [selectedTableKeys, setSelectedTableKeys] = useState<Set<string>>(new Set())
+  const [mergedClearLoading, setMergedClearLoading] = useState(false)
 
   const toggleTableCollapsed = (tableKey: string) => {
     setCollapsedTables((prev) => {
@@ -76,6 +78,49 @@ export default function KitchenDashboardPage() {
       return next
     })
   }
+
+  const toggleTableSelected = (tableKey: string) => {
+    setSelectedTableKeys((prev) => {
+      const next = new Set(prev)
+      if (next.has(tableKey)) {
+        next.delete(tableKey)
+      } else {
+        next.add(tableKey)
+      }
+      return next
+    })
+  }
+
+  // Persist merged table selection so guest bill panels can show a combined bill
+  useEffect(() => {
+    if (!restaurantId || activeTab !== 'tables') return
+    const controller = new AbortController()
+
+    const syncMerge = async () => {
+      try {
+        const tableNumbers: string[] = []
+        selectedTableKeys.forEach((key) => {
+          if (key === 'no-table') return
+          tableNumbers.push(key)
+        })
+
+        await fetch(`${API_BASE}/api/restaurants/${restaurantId}/merged-tables`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tables: tableNumbers }),
+          signal: controller.signal,
+        })
+      } catch {
+        // ignore background sync errors
+      }
+    }
+
+    void syncMerge()
+
+    return () => {
+      controller.abort()
+    }
+  }, [restaurantId, activeTab, selectedTableKeys])
 
   useEffect(() => {
     if (!restaurantId) return
@@ -316,6 +361,34 @@ export default function KitchenDashboardPage() {
     })
   }, [orders, waiterCalls, restaurantTables])
 
+  const mergedSelection = useMemo(() => {
+    if (selectedTableKeys.size === 0) return null
+    const selected = new Set(selectedTableKeys)
+    const selectedTables = tables.filter((t) => selected.has(t.key))
+    if (selectedTables.length === 0) return null
+
+    const mergedOrders = selectedTables.flatMap((t) => t.orders)
+    const totalAmount = mergedOrders.reduce((sum, order) => {
+      const orderTotal = order.items.reduce(
+        (itemSum, item) => itemSum + (item.menuItem?.price ?? 0) * item.quantity,
+        0
+      )
+      return sum + orderTotal
+    }, 0)
+
+    const tableLabels = selectedTables.map((t) => t.label)
+    const tableNumbers = selectedTables
+      .map((t) => (t.key === 'no-table' ? undefined : t.orders[0]?.tableNumber))
+      .filter((n): n is string => Boolean(n))
+
+    return {
+      orders: mergedOrders,
+      totalAmount,
+      tableLabels,
+      tableNumbers,
+    }
+  }, [selectedTableKeys, tables])
+
   const clearTableOrders = async (tableNumber?: string) => {
     if (!restaurantId) return
     try {
@@ -344,6 +417,20 @@ export default function KitchenDashboardPage() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err)
+    }
+  }
+
+  const clearMergedTables = async () => {
+    if (!restaurantId || !mergedSelection || mergedSelection.tableNumbers.length === 0) return
+    setMergedClearLoading(true)
+    try {
+      for (const tableNumber of mergedSelection.tableNumbers) {
+        // Reuse existing clear logic per table
+        await clearTableOrders(tableNumber)
+      }
+      setSelectedTableKeys(new Set())
+    } finally {
+      setMergedClearLoading(false)
     }
   }
 
@@ -670,6 +757,27 @@ export default function KitchenDashboardPage() {
         )}
         {activeTab === 'tables' && !loading && !tablesLoading && (
           <div className="mt-3 space-y-3">
+            {mergedSelection && mergedSelection.tableLabels.length > 1 && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-3 text-xs shadow-sm">
+                <h2 className="mb-1 text-sm font-semibold text-slate-900">
+                  Combined bill for {mergedSelection.tableLabels.join(', ')}
+                </h2>
+                <p className="mb-2 text-[11px] text-slate-600">
+                  This merges orders from the selected tables into a single bill for payment.
+                </p>
+                <p className="mb-3 text-[11px] font-medium text-slate-900">
+                  Total amount (menu prices sum): {mergedSelection.totalAmount.toFixed(2)}
+                </p>
+                <button
+                  type="button"
+                  className="rounded-full bg-slate-900 px-4 py-1.5 text-[11px] font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+                  disabled={mergedClearLoading}
+                  onClick={() => void clearMergedTables()}
+                >
+                  {mergedClearLoading ? 'Clearing tables…' : 'Mark paid & clear selected tables'}
+                </button>
+              </div>
+            )}
             <div className="flex items-center justify-between text-xs">
               <p className="text-slate-600">Manage tables</p>
               <div className="flex items-center gap-2">
@@ -885,6 +993,20 @@ export default function KitchenDashboardPage() {
                         Clear table
                       </button>
                     )}
+                    <div className="shrink-0 pl-1">
+                      <label className="inline-flex items-center gap-1 text-[11px] text-slate-600">
+                        <input
+                          type="checkbox"
+                          className="h-3.5 w-3.5 rounded border-slate-300 text-slate-900"
+                          checked={selectedTableKeys.has(table.key)}
+                          onChange={(e) => {
+                            e.stopPropagation()
+                            toggleTableSelected(table.key)
+                          }}
+                        />
+                        <span>Merge</span>
+                      </label>
+                    </div>
                   </div>
                   {!isCollapsed && (
                     <div className="border-t border-slate-100 px-3 pb-3 pt-2">

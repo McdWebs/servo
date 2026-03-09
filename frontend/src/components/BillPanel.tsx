@@ -45,6 +45,7 @@ export default function BillPanel({
   const [callHandled, setCallHandled] = useState(false)
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [mergedTables, setMergedTables] = useState<string[] | null>(null)
   const callInFlightRef = useRef(false)
 
   useEffect(() => {
@@ -53,6 +54,32 @@ export default function BillPanel({
       setLoading(true)
       setLoadError(null)
       try {
+        // When a table is part of a merged bill, load orders for all tables in the merge group
+        let tablesToInclude: string[] | null = null
+        if (tableNumber) {
+          try {
+            const mergeRes = await fetch(
+              `${API_BASE}/api/restaurants/${restaurantId}/merged-tables?tableNumber=${encodeURIComponent(tableNumber)}`
+            )
+            const mergeData = (await mergeRes.json()) as {
+              merged: { tables: string[] } | null
+              message?: string
+            }
+            if (mergeRes.ok && mergeData.merged?.tables?.length) {
+              tablesToInclude = mergeData.merged.tables
+              setMergedTables(mergeData.merged.tables)
+            } else {
+              tablesToInclude = [tableNumber]
+              setMergedTables([tableNumber])
+            }
+          } catch {
+            tablesToInclude = [tableNumber]
+            setMergedTables([tableNumber])
+          }
+        } else {
+          setMergedTables(null)
+        }
+
         const res = await fetch(`${API_BASE}/api/restaurants/${restaurantId}/orders`)
         const data = (await res.json()) as (BillOrder & { status?: string })[] & { message?: string }
         if (!res.ok) {
@@ -60,8 +87,8 @@ export default function BillPanel({
         }
         const filtered = data.filter((order) => {
           const orderTable = order.tableNumber
-          if (tableNumber) {
-            return orderTable === tableNumber
+          if (tablesToInclude && tablesToInclude.length > 0) {
+            return orderTable ? tablesToInclude.includes(orderTable) : false
           }
           return !orderTable
         })
@@ -186,8 +213,14 @@ export default function BillPanel({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end bg-black/40 sm:items-center">
-      <div className="w-full rounded-t-3xl bg-white p-4 sm:mx-auto sm:max-w-md sm:rounded-3xl sm:border sm:border-slate-200 shadow-xl">
+    <div
+      className="fixed inset-0 z-40 flex items-end bg-black/40 sm:items-center"
+      onClick={onClose}
+    >
+      <div
+        className="w-full rounded-t-3xl bg-white p-4 sm:mx-auto sm:max-w-md sm:rounded-3xl sm:border sm:border-slate-200 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-900">Your bill</h2>
           <button

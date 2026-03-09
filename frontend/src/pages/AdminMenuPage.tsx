@@ -35,7 +35,9 @@ export default function AdminMenuPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const [uploadingImage, setUploadingImage] = useState(false)
+  const [newItemImagePreview, setNewItemImagePreview] = useState<string | null>(null)
+  const [editItemImagePreview, setEditItemImagePreview] = useState<string | null>(null)
+  const [openActionsItemId, setOpenActionsItemId] = useState<string | null>(null)
   const [dragCategoryIndex, setDragCategoryIndex] = useState<number | null>(null)
   const [dragItemState, setDragItemState] = useState<{
     categoryId: string
@@ -183,15 +185,8 @@ export default function AdminMenuPage() {
     formData.set('allergens', allergens.join(','))
     formData.set('tags', tags.join(','))
 
-    const imageEntry = formData.get('image')
-    const hasImage =
-      imageEntry instanceof File && typeof imageEntry.size === 'number' && imageEntry.size > 0
-
     try {
       setSaving(true)
-      if (hasImage) {
-        setUploadingImage(true)
-      }
       const res = await fetch(`${API_BASE}/api/categories/${categoryId}/items`, {
         method: 'POST',
         headers: {
@@ -211,9 +206,6 @@ export default function AdminMenuPage() {
       return false
     } finally {
       setSaving(false)
-      if (hasImage) {
-        setUploadingImage(false)
-      }
     }
   }
 
@@ -276,15 +268,8 @@ export default function AdminMenuPage() {
       formData.set('available', 'false')
     }
 
-    const imageEntry = formData.get('image')
-    const hasImage =
-      imageEntry instanceof File && typeof imageEntry.size === 'number' && imageEntry.size > 0
-
     setSaving(true)
     try {
-      if (hasImage) {
-        setUploadingImage(true)
-      }
       const res = await fetch(`${API_BASE}/api/items/${itemId}`, {
         method: 'PATCH',
         headers: {
@@ -302,9 +287,6 @@ export default function AdminMenuPage() {
       alert((err as Error).message)
     } finally {
       setSaving(false)
-      if (hasImage) {
-        setUploadingImage(false)
-      }
     }
   }
 
@@ -480,21 +462,16 @@ export default function AdminMenuPage() {
   const currencySymbol = getCurrencySymbol(data.restaurant.currency)
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-8">
+    <div
+      className="min-h-screen bg-slate-50 text-slate-900 pb-8"
+      onClick={() => setOpenActionsItemId(null)}
+    >
       <div className="mx-auto max-w-3xl px-3 py-4 space-y-6 sm:px-4 sm:py-6">
-        <header className="space-y-2">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-              {data.restaurant.name}
-            </h1>
-            <p className="text-xs text-slate-500">Menu admin · manage categories and items</p>
-          </div>
-          {uploadingImage && (
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] text-emerald-800">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Uploading image…</span>
-            </div>
-          )}
+        <header>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+            {data.restaurant.name}
+          </h1>
+          <p className="text-xs text-slate-500">Menu admin · manage categories and items</p>
         </header>
 
         <section className="rounded-2xl border border-slate-200 bg-white px-3 py-3 sm:px-4">
@@ -743,18 +720,20 @@ export default function AdminMenuPage() {
               {/* Items list */}
               <div className="text-xs">
                 {category.items && category.items.length > 0 ? (
-                  <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/60">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/60">
                     <div className="divide-y divide-slate-100">
                       {category.items.map((item, itemIndex) => (
                         <div
                           key={item._id}
-                          className={`flex flex-col gap-3 bg-white/95 px-3 py-3 transition hover:bg-emerald-50/40 sm:grid sm:grid-cols-[minmax(0,1.7fr)_minmax(0,1.2fr)_auto] sm:items-center sm:gap-3 touch-manipulation ${
+                          className={`relative flex flex-col gap-3 bg-white/95 px-3 py-3 transition hover:bg-emerald-50/40 sm:flex-row sm:items-center sm:justify-between touch-manipulation ${
                             dragItemState &&
                             dragItemState.categoryId === category._id &&
                             dragItemState.index === itemIndex
                               ? 'ring-1 ring-emerald-300'
                               : ''
-                          } ${item.available === false ? 'opacity-75' : ''}`}
+                          } ${item.available === false ? 'opacity-75' : ''} ${
+                            openActionsItemId === item._id ? 'z-20' : ''
+                          }`}
                           draggable
                           onDragStart={(e) => {
                             if (saving) return
@@ -802,166 +781,174 @@ export default function AdminMenuPage() {
                           }}
                           onDragEnd={() => setDragItemState(null)}
                         >
-                          {/* Item info */}
-                          <div className="flex items-start gap-3">
-                            <div className="mt-1 hidden h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-[9px] text-slate-400 sm:flex">
-                              ⋮⋮
-                            </div>
-                            {item.imageUrl && (
-                              <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                                <img
-                                  src={item.imageUrl}
-                                  alt={item.name}
-                                  className="h-full w-full object-cover"
-                                />
+                          {/* Left: image, title/description, tags */}
+                          <div className="flex flex-1 flex-col gap-2">
+                            <div className="flex items-start gap-3">
+                              <div className="mt-1 hidden h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-[9px] text-slate-400 sm:flex">
+                                ⋮⋮
                               </div>
-                            )}
-                            <div className="min-w-0 space-y-1">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0">
-                                  <div className="truncate text-xs font-semibold text-slate-900">
-                                    {item.name}
-                                  </div>
-                                  <div className="mt-0.5 line-clamp-2 text-[11px] text-slate-500">
-                                    {item.description}
-                                  </div>
-                                </div>
-                                <div className="hidden items-center gap-1 sm:flex">
-                                  <span
-                                    className={`h-2 w-2 rounded-full ${
-                                      item.available === false ? 'bg-rose-400' : 'bg-emerald-400'
-                                    }`}
+                              {item.imageUrl && (
+                                <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                                  <img
+                                    src={item.imageUrl}
+                                    alt={item.name}
+                                    className="h-full w-full object-cover"
                                   />
-                                  <span className="text-[10px] text-slate-500">
-                                    {item.available === false ? 'Unavailable' : 'Available'}
-                                  </span>
+                                </div>
+                              )}
+                              <div className="min-w-0 space-y-1">
+                                <div className="truncate text-xs font-semibold text-slate-900">
+                                  {item.name}
+                                </div>
+                                <div className="mt-0.5 text-[11px] text-slate-500">
+                                  {item.description}
                                 </div>
                               </div>
                             </div>
-                          </div>
-
-                          {/* Tags & allergens */}
-                          <div className="flex flex-wrap gap-1">
-                            {(item.tags?.length ?? 0) > 0 || (item.allergens?.length ?? 0) > 0 ? (
-                              <>
-                                {item.tags?.map((tag) => (
-                                  <span
-                                    key={tag}
-                                    className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                                {item.allergens?.map((allergen) => (
-                                  <span
-                                    key={allergen}
-                                    className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700"
-                                  >
-                                    {allergen}
-                                  </span>
-                                ))}
-                              </>
-                            ) : (
-                              <span className="text-[10px] text-slate-400">
-                                No tags or allergens set
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Price & actions */}
-                          <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-white">
-                                <span>{currencySymbol}</span>
-                                <span>{item.price.toFixed(2)}</span>
-                              </div>
-                              <button
-                                type="button"
-                                className={`min-h-[32px] touch-manipulation rounded-full px-3 py-1.5 text-[10px] font-medium ${
-                                  item.available === false
-                                    ? 'border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
-                                    : 'border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100'
-                                } disabled:opacity-60`}
-                                disabled={saving}
-                                onClick={() => {
-                                  if (saving) return
-                                  const next = !(item.available ?? true)
-                                  setSaving(true)
-                                  void (async () => {
-                                    try {
-                                      const res = await fetch(`${API_BASE}/api/items/${item._id}`, {
-                                        method: 'PATCH',
-                                        headers: {
-                                          'Content-Type': 'application/json',
-                                          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                                        },
-                                        body: JSON.stringify({ available: next }),
-                                      })
-                                      if (!res.ok) {
-                                        const json = (await res.json()) as { message?: string }
-                                        throw new Error(
-                                          json.message ?? 'Failed to update availability'
-                                        )
-                                      }
-                                      setData((prev) =>
-                                        prev
-                                          ? {
-                                              ...prev,
-                                              categories: prev.categories.map((cat) =>
-                                                cat._id === category._id
-                                                  ? {
-                                                      ...cat,
-                                                      items: cat.items.map((it) =>
-                                                        it._id === item._id
-                                                          ? { ...it, available: next }
-                                                          : it
-                                                      ),
-                                                    }
-                                                  : cat
-                                              ),
-                                            }
-                                          : prev
-                                      )
-                                    } catch (err) {
-                                      // eslint-disable-next-line no-alert
-                                      alert((err as Error).message)
-                                    } finally {
-                                      setSaving(false)
-                                    }
-                                  })()
-                                }}
-                              >
-                                {item.available === false ? 'Mark available' : 'Mark unavailable'}
-                              </button>
+                            <div className="flex flex-wrap gap-1">
+                              {(item.tags?.length ?? 0) > 0 || (item.allergens?.length ?? 0) > 0 ? (
+                                <>
+                                  {item.tags?.map((tag) => (
+                                    <span
+                                      key={tag}
+                                      className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                  {item.allergens?.map((allergen) => (
+                                    <span
+                                      key={allergen}
+                                      className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700"
+                                    >
+                                      {allergen}
+                                    </span>
+                                  ))}
+                                </>
+                              ) : (
+                                <span className="text-[10px] text-slate-400">
+                                  No tags or allergens set
+                                </span>
+                              )}
                             </div>
-                            <div className="flex gap-1">
+                          </div>
+
+                          {/* Right: price and actions dropdown */}
+                          <div className="mt-1 flex flex-col items-end gap-2 sm:mt-0 sm:w-auto">
+                            <div className="flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-white">
+                              <span>{currencySymbol}</span>
+                              <span>{item.price.toFixed(2)}</span>
+                            </div>
+                            <div
+                              className="relative"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                              }}
+                            >
                               <button
                                 type="button"
-                                className="min-h-[32px] touch-manipulation rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                                disabled={saving}
+                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-medium text-slate-700 hover:bg-slate-50"
                                 onClick={() =>
-                                  setEditingItem({
-                                    item,
-                                    categoryId: category._id,
-                                  })
+                                  setOpenActionsItemId((prev) =>
+                                    prev === item._id ? null : item._id
+                                  )
                                 }
                               >
-                                Edit
+                                Actions
                               </button>
-                              <button
-                                type="button"
-                                className="min-h-[32px] touch-manipulation rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[10px] font-medium text-rose-700 hover:bg-rose-100"
-                                disabled={saving}
-                                onClick={() =>
-                                  setPendingDelete({
-                                    type: 'item',
-                                    id: item._id,
-                                    name: item.name,
-                                  })
-                                }
-                              >
-                                Delete
-                              </button>
+                              {openActionsItemId === item._id && (
+                                <div className="absolute right-0 z-30 mt-1 w-40 rounded-lg border border-slate-200 bg-white py-1 text-[11px] shadow-lg">
+                                  <button
+                                    type="button"
+                                    className="block w-full px-3 py-1.5 text-left text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                                    disabled={saving}
+                                    onClick={() => {
+                                      if (saving) return
+                                      const next = !(item.available ?? true)
+                                      setSaving(true)
+                                      void (async () => {
+                                        try {
+                                          const res = await fetch(
+                                            `${API_BASE}/api/items/${item._id}`,
+                                            {
+                                              method: 'PATCH',
+                                              headers: {
+                                                'Content-Type': 'application/json',
+                                                ...(token
+                                                  ? { Authorization: `Bearer ${token}` }
+                                                  : {}),
+                                              },
+                                              body: JSON.stringify({ available: next }),
+                                            }
+                                          )
+                                          if (!res.ok) {
+                                            const json = (await res.json()) as { message?: string }
+                                            throw new Error(
+                                              json.message ?? 'Failed to update availability'
+                                            )
+                                          }
+                                          setData((prev) =>
+                                            prev
+                                              ? {
+                                                  ...prev,
+                                                  categories: prev.categories.map((cat) =>
+                                                    cat._id === category._id
+                                                      ? {
+                                                          ...cat,
+                                                          items: cat.items.map((it) =>
+                                                            it._id === item._id
+                                                              ? { ...it, available: next }
+                                                              : it
+                                                          ),
+                                                        }
+                                                      : cat
+                                                  ),
+                                                }
+                                              : prev
+                                          )
+                                        } catch (err) {
+                                          // eslint-disable-next-line no-alert
+                                          alert((err as Error).message)
+                                        } finally {
+                                          setSaving(false)
+                                          setOpenActionsItemId(null)
+                                        }
+                                      })()
+                                    }}
+                                  >
+                                    {item.available === false ? 'Mark available' : 'Mark unavailable'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="block w-full px-3 py-1.5 text-left text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                                    disabled={saving}
+                                    onClick={() => {
+                                      setEditingItem({
+                                        item,
+                                        categoryId: category._id,
+                                      })
+                                      setOpenActionsItemId(null)
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="block w-full px-3 py-1.5 text-left text-rose-700 hover:bg-rose-50 disabled:opacity-60"
+                                    disabled={saving}
+                                    onClick={() => {
+                                      setPendingDelete({
+                                        type: 'item',
+                                        id: item._id,
+                                        name: item.name,
+                                      })
+                                      setOpenActionsItemId(null)
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1029,9 +1016,13 @@ export default function AdminMenuPage() {
                   if (!addingItemForCategory) return
                   const form = e.currentTarget
                   const formData = new FormData(form)
+                  if (!newItemImagePreview) {
+                    formData.delete('image')
+                  }
                   void (async () => {
                     const ok = await addItem(addingItemForCategory._id, formData)
                     if (ok) {
+                      setNewItemImagePreview(null)
                       setAddingItemForCategory(null)
                     }
                   })()
@@ -1128,9 +1119,9 @@ export default function AdminMenuPage() {
                         <span className="text-[10px] text-slate-500">
                           Square image works best · max 5MB
                         </span>
-                        {uploadingImage && (
-                          <span className="mt-0.5 text-[10px] text-emerald-700">
-                            Uploading image…
+                        {newItemImagePreview && (
+                          <span className="mt-1 text-[10px] text-emerald-700">
+                            Preview selected below
                           </span>
                         )}
                       </div>
@@ -1139,15 +1130,44 @@ export default function AdminMenuPage() {
                         name="image"
                         accept="image/*"
                         className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            const url = URL.createObjectURL(file)
+                            setNewItemImagePreview(url)
+                          } else {
+                            setNewItemImagePreview(null)
+                          }
+                        }}
                       />
                     </label>
+                    {newItemImagePreview && (
+                      <div className="mt-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                        <div className="h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                          <img
+                            src={newItemImagePreview}
+                            alt="New item preview"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="text-[11px] font-medium text-rose-600 hover:text-rose-700"
+                          onClick={() => {
+                            setNewItemImagePreview(null)
+                          }}
+                        >
+                          Remove image
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="mt-3 flex justify-end gap-2">
                   <button
                     type="button"
                     className="min-h-[44px] touch-manipulation rounded-full border border-slate-200 bg-white px-4 py-2 text-xs text-slate-700 hover:bg-slate-50"
-                    disabled={saving || uploadingImage}
+                    disabled={saving}
                     onClick={() => setAddingItemForCategory(null)}
                   >
                     Cancel
@@ -1155,9 +1175,9 @@ export default function AdminMenuPage() {
                   <button
                     type="submit"
                     className="min-h-[44px] touch-manipulation rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                    disabled={saving || uploadingImage}
+                    disabled={saving}
                   >
-                    {uploadingImage ? 'Uploading image…' : 'Add item'}
+                    Add item
                   </button>
                 </div>
               </form>
@@ -1171,16 +1191,6 @@ export default function AdminMenuPage() {
               <p className="mt-1 text-[11px] text-slate-600">
                 Update the details for <span className="font-semibold">{editingItem.item.name}</span>.
               </p>
-              {editingItem.item.imageUrl && (
-                <div className="mt-3 flex items-center gap-3">
-                  <img
-                    src={editingItem.item.imageUrl}
-                    alt={editingItem.item.name}
-                    className="h-16 w-16 rounded-lg object-cover border border-slate-200"
-                  />
-                  <span className="text-[11px] text-slate-500">Current image</span>
-                </div>
-              )}
               <form
                 className="mt-3 space-y-2 text-xs"
                 onSubmit={(e) => {
@@ -1188,8 +1198,12 @@ export default function AdminMenuPage() {
                   if (!editingItem) return
                   const form = e.currentTarget
                   const formData = new FormData(form)
+                  if (!editItemImagePreview) {
+                    formData.delete('image')
+                  }
                   void (async () => {
                     await updateItemDetails(editingItem.item._id, formData)
+                    setEditItemImagePreview(null)
                     setEditingItem(null)
                   })()
                 }}
@@ -1296,9 +1310,9 @@ export default function AdminMenuPage() {
                         <span className="text-[10px] text-slate-500">
                           Square image works best · max 5MB
                         </span>
-                        {uploadingImage && (
-                          <span className="mt-0.5 text-[10px] text-emerald-700">
-                            Uploading image…
+                        {editItemImagePreview && (
+                          <span className="mt-1 text-[10px] text-emerald-700">
+                            Preview selected below
                           </span>
                         )}
                       </div>
@@ -1307,9 +1321,40 @@ export default function AdminMenuPage() {
                         name="image"
                         accept="image/*"
                         className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            const url = URL.createObjectURL(file)
+                            setEditItemImagePreview(url)
+                          } else {
+                            setEditItemImagePreview(null)
+                          }
+                        }}
                       />
                     </label>
-                    {editingItem.item.imageUrl && (
+                    {(editingItem.item.imageUrl || editItemImagePreview) && (
+                      <div className="mt-2 flex items-center gap-3">
+                        <div className="h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                          <img
+                            src={editItemImagePreview ?? editingItem.item.imageUrl ?? ''}
+                            alt="New image preview"
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        {editItemImagePreview && (
+                          <button
+                            type="button"
+                            className="text-[11px] font-medium text-rose-600 hover:text-rose-700"
+                            onClick={() => {
+                              setEditItemImagePreview(null)
+                            }}
+                          >
+                            Remove new image
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {editingItem.item.imageUrl && !editItemImagePreview && (
                       <label className="mt-1 inline-flex items-center gap-2 text-[11px] text-slate-700">
                         <input type="checkbox" name="removeImage" className="h-3 w-3" />
                         <span>Remove existing image</span>
@@ -1335,7 +1380,7 @@ export default function AdminMenuPage() {
                   <button
                     type="button"
                     className="min-h-[44px] touch-manipulation rounded-full border border-slate-200 bg-white px-4 py-2 text-xs text-slate-700 hover:bg-slate-50"
-                    disabled={saving || uploadingImage}
+                    disabled={saving}
                     onClick={() => setEditingItem(null)}
                   >
                     Cancel
@@ -1343,9 +1388,9 @@ export default function AdminMenuPage() {
                   <button
                     type="submit"
                     className="min-h-[44px] touch-manipulation rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                    disabled={saving || uploadingImage}
+                    disabled={saving}
                   >
-                    {uploadingImage ? 'Uploading image…' : 'Save changes'}
+                    Save changes
                   </button>
                 </div>
               </form>

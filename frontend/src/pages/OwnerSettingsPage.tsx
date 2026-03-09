@@ -80,6 +80,14 @@ export default function OwnerSettingsPage() {
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   useEffect(() => {
+    if (!success) return
+    const timeout = setTimeout(() => {
+      setSuccess(null)
+    }, 4000)
+    return () => clearTimeout(timeout)
+  }, [success])
+
+  useEffect(() => {
     if (restaurant) {
       setForm({
         name: restaurant.name,
@@ -254,49 +262,6 @@ export default function OwnerSettingsPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)] items-start">
-        {/* Sidebar: shown first on mobile so public link is accessible */}
-        <aside className="space-y-4 lg:order-2">
-          <div className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm sm:block">
-            <h2 className="text-sm font-semibold text-slate-900">Account</h2>
-            <p className="mt-1 text-xs text-slate-500">
-              You are signed in as:
-            </p>
-            <p className="mt-2 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-              {owner?.email ?? '—'}
-            </p>
-            <button
-              type="button"
-              className="mt-3 w-full rounded-full bg-slate-800 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-700"
-              onClick={() => {
-                logout()
-                navigate('/owner/login', { replace: true })
-              }}
-            >
-              Sign out
-            </button>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Public menu link</h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Share this link with your guests so they can view the menu and order from their
-              table.
-            </p>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-              <code className="min-w-0 flex-1 truncate rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-800">
-                {publicUrl}
-              </code>
-              <button
-                type="button"
-                className="w-full shrink-0 rounded-full bg-slate-900 px-3 py-2 text-[11px] font-semibold text-white hover:bg-slate-800 sm:w-auto"
-                onClick={handleCopyLink}
-              >
-                Copy link
-              </button>
-            </div>
-          </div>
-        </aside>
-
         {/* Main settings form */}
         <form onSubmit={handleSubmit} className="space-y-4 lg:order-1">
           <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:py-4">
@@ -560,18 +525,19 @@ export default function OwnerSettingsPage() {
                       connected to) your receipt/kitchen printer.
                     </li>
                     <li>
-                      On that computer, set your kitchen printer as the <strong>default printer</strong>{' '}
-                      (in System Settings on Mac, or Settings → Devices → Printers on Windows).
+                      On that computer, set your kitchen printer as the{' '}
+                      <strong>default printer</strong> (in System Settings on Mac, or Settings →
+                      Devices → Printers on Windows).
                     </li>
                     <li>
                       When a new order appears, click <strong>Print</strong> on the order card. The
-                      browser will use the default printer, or you can pick the printer in the print
-                      dialog.
+                      browser will use the default printer, or you can pick the printer in the
+                      print dialog.
                     </li>
                   </ol>
                   <p className="mt-2 text-slate-500">
-                    There is no separate “printer pairing” in this app—the connection is through the
-                    computer’s default printer.
+                    There is no separate “printer pairing” in this app—the connection is through
+                    the computer’s default printer.
                   </p>
                 </details>
                 <div className="mt-4 space-y-3 text-sm">
@@ -612,8 +578,8 @@ export default function OwnerSettingsPage() {
               <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
                 <h2 className="text-sm font-semibold text-slate-900">AI waiter instructions</h2>
                 <p className="mt-1 text-xs text-slate-500">
-                  Customize how the AI behaves: tone, what to emphasize, or extra rules. Leave blank
-                  to use defaults.
+                  Customize how the AI behaves: tone, what to emphasize, or extra rules. Leave
+                  blank to use defaults.
                 </p>
                 <div className="mt-4 space-y-1">
                   <label htmlFor="aiInstructions" className={labelClass}>
@@ -632,6 +598,44 @@ export default function OwnerSettingsPage() {
                     The AI still only answers from the menu; use this to control style and
                     priorities.
                   </p>
+                </div>
+              </div>
+
+              <div className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm sm:block">
+                <h2 className="text-sm font-semibold text-slate-900">Account</h2>
+                <p className="mt-1 text-xs text-slate-500">You are signed in as:</p>
+                <p className="mt-2 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                  {owner?.email ?? '—'}
+                </p>
+                <button
+                  type="button"
+                  className="mt-3 w-full rounded-full bg-slate-800 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-700"
+                  onClick={() => {
+                    logout()
+                    navigate('/owner/login', { replace: true })
+                  }}
+                >
+                  Sign out
+                </button>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm">
+                <h2 className="text-sm font-semibold text-slate-900">Public menu link</h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  Share this link with your guests so they can view the menu and order from their
+                  table.
+                </p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <code className="min-w-0 flex-1 truncate rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-800">
+                    {publicUrl}
+                  </code>
+                  <button
+                    type="button"
+                    className="w-full shrink-0 rounded-full bg-slate-900 px-3 py-2 text-[11px] font-semibold text-white hover:bg-slate-800 sm:w-auto"
+                    onClick={handleCopyLink}
+                  >
+                    Copy link
+                  </button>
                 </div>
               </div>
             </>

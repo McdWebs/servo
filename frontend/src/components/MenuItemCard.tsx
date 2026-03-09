@@ -142,17 +142,23 @@ export default function MenuItemCard({ item, currencySymbol, onDetailOpen, onDet
       </div>
 
       {showDetails ? (
-        <div className="fixed inset-0 z-30 flex items-end bg-black/50 backdrop-blur-sm sm:items-center">
-          <div className="w-full max-h-[90vh] overflow-y-auto rounded-t-3xl bg-white sm:max-w-md sm:rounded-3xl sm:mx-auto shadow-2xl overflow-hidden">
-            <div className="relative h-52 w-full shrink-0 bg-slate-100">
+        <div
+          className="fixed inset-0 z-30 flex items-end bg-black/50 backdrop-blur-sm sm:items-center"
+          onClick={closeDetails}
+        >
+          <div
+            className="w-full max-h-[90vh] overflow-y-auto rounded-t-3xl bg-white sm:max-w-md sm:rounded-3xl sm:mx-auto shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative w-full bg-slate-100 flex items-center justify-center">
               {item.imageUrl ? (
                 <img
                   src={item.imageUrl}
                   alt={item.name}
-                  className="h-full w-full object-cover"
+                  className="max-h-[60vh] max-w-full w-auto object-contain"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-50/90 to-orange-50/80">
+                <div className="flex h-52 w-full items-center justify-center bg-gradient-to-br from-amber-50/90 to-orange-50/80">
                   <svg
                     className="h-20 w-20 text-amber-300/90"
                     fill="none"

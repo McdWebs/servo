@@ -156,11 +156,13 @@ export default function CartDrawer({
       className={`fixed inset-0 z-40 flex justify-end bg-black/30 transition-opacity ${
         open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
+      onClick={onClose}
     >
       <div
         className={`flex h-full w-full max-w-md flex-col bg-white shadow-xl transition-transform pointer-events-auto ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <h2 className="text-sm font-semibold text-slate-900">Your order</h2>

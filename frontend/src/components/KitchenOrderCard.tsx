@@ -4,6 +4,7 @@ interface KitchenOrderItem {
   notes?: string
   menuItem: {
     name: string
+    price?: number
   } | null
 }
 
