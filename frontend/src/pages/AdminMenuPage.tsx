@@ -13,6 +13,41 @@ interface AdminMenuResponse {
 const DEFAULT_ALLERGENS = ['gluten', 'nuts', 'dairy', 'eggs', 'soy', 'shellfish']
 const DEFAULT_TAGS = ['vegan', 'vegetarian', 'spicy', 'gluten-free', 'kids', 'chef special']
 
+interface BulkCategory {
+  categoryName: string
+  items: { name: string; price: number }[]
+}
+
+function parseBulkMenuText(text: string): BulkCategory[] {
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean)
+  const result: BulkCategory[] = []
+  let current: BulkCategory | null = null
+
+  for (const line of lines) {
+    const emIdx = line.indexOf('—')
+    const enIdx = line.indexOf('–')
+    const dashIdx = emIdx >= 0 ? emIdx : enIdx >= 0 ? enIdx : -1
+
+    if (dashIdx > 0) {
+      const name = line.slice(0, dashIdx).trim()
+      const afterDash = line.slice(dashIdx + 1).trim()
+      const priceStr = afterDash.replace(/[₪$€£\s]/g, '').replace(',', '.')
+      const price = parseFloat(priceStr)
+      if (name && !Number.isNaN(price) && price > 0 && current) {
+        current.items.push({ name, price })
+        continue
+      }
+    }
+
+    if (line) {
+      current = { categoryName: line, items: [] }
+      result.push(current)
+    }
+  }
+
+  return result.filter((c) => c.items.length > 0)
+}
+
 function getCurrencySymbol(currency?: string) {
   switch ((currency ?? 'USD').toUpperCase()) {
     case 'EUR':
@@ -67,6 +102,12 @@ export default function AdminMenuPage() {
     name: string
   } | null>(null)
   const [addCategoryOpen, setAddCategoryOpen] = useState(false)
+  const [bulkImportOpen, setBulkImportOpen] = useState(false)
+  const [bulkImportText, setBulkImportText] = useState('')
+  const [bulkImportProgress, setBulkImportProgress] = useState<{
+    done: number
+    total: number
+  } | null>(null)
 
   const loadAdminMenu = async (opts?: { showFullscreenLoader?: boolean }) => {
     if (!restaurantId) return
@@ -420,6 +461,63 @@ export default function AdminMenuPage() {
     }
   }
 
+  const bulkImport = async (parsed: BulkCategory[]) => {
+    if (!restaurantId) return
+    const totalItems = parsed.reduce((sum, c) => sum + c.items.length, 0)
+    let done = 0
+    setBulkImportProgress({ done: 0, total: totalItems })
+    setSaving(true)
+    try {
+      for (const cat of parsed) {
+        const catRes = await fetch(`${API_BASE}/api/restaurants/${restaurantId}/categories`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ name: cat.categoryName }),
+        })
+        const catData = (await catRes.json()) as { _id: string; message?: string }
+        if (!catRes.ok) {
+          throw new Error(catData.message ?? `Failed to create category "${cat.categoryName}"`)
+        }
+
+        for (const item of cat.items) {
+          const formData = new FormData()
+          formData.set('name', item.name)
+          formData.set('description', item.name)
+          formData.set('price', item.price.toString())
+
+          const itemRes = await fetch(`${API_BASE}/api/categories/${catData._id}/items`, {
+            method: 'POST',
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: formData,
+          })
+          if (!itemRes.ok) {
+            const itemData = (await itemRes.json()) as { message?: string }
+            throw new Error(itemData.message ?? `Failed to create item "${item.name}"`)
+          }
+          done++
+          setBulkImportProgress({ done, total: totalItems })
+        }
+      }
+
+      await loadAdminMenu()
+      setBulkImportOpen(false)
+      setBulkImportText('')
+      setBulkImportProgress(null)
+    } catch (err) {
+      // eslint-disable-next-line no-alert
+      alert((err as Error).message)
+      setBulkImportProgress(null)
+      await loadAdminMenu()
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleAutoScroll = (clientY: number) => {
     const edgeThreshold = 80
     const maxScrollAmount = 40
@@ -478,14 +576,24 @@ export default function AdminMenuPage() {
           {/* Mobile: single button that expands to show form */}
           <div className="sm:hidden">
             {!addCategoryOpen ? (
-              <button
-                type="button"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                disabled={saving}
-                onClick={() => setAddCategoryOpen(true)}
-              >
-                + Add category
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                  disabled={saving}
+                  onClick={() => setAddCategoryOpen(true)}
+                >
+                  + Add category
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-60"
+                  disabled={saving}
+                  onClick={() => setBulkImportOpen(true)}
+                >
+                  ⬆ Bulk import from text
+                </button>
+              </div>
             ) : (
               <form
                 className="flex flex-col gap-2 text-xs"
@@ -549,6 +657,14 @@ export default function AdminMenuPage() {
                 disabled={saving}
               >
                 Add category
+              </button>
+              <button
+                type="button"
+                className="min-h-[44px] touch-manipulation rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-60"
+                disabled={saving}
+                onClick={() => setBulkImportOpen(true)}
+              >
+                ⬆ Bulk import
               </button>
             </form>
           </div>
@@ -963,6 +1079,113 @@ export default function AdminMenuPage() {
           ))}
         </section>
 
+        {bulkImportOpen && (
+          <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-y-auto overscroll-contain sm:items-center">
+            <div className="w-full max-w-lg rounded-2xl bg-white p-4 shadow-xl my-4 sm:my-0">
+              <h2 className="text-sm font-semibold text-slate-900">Bulk import from text</h2>
+              <p className="mt-1 text-[11px] text-slate-500">
+                Paste your menu text below. A line without a dash is treated as a category name.
+                A line like <span className="font-mono font-medium text-slate-700">Pinko — ₪53</span> is treated as an item.
+              </p>
+              <textarea
+                className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400 font-mono leading-relaxed"
+                rows={10}
+                placeholder={`Cocktails\nPinko — ₪53\nNigori Mule — ₪58\n\nDesserts\nChocolate Fondant — ₪42`}
+                value={bulkImportText}
+                onChange={(e) => setBulkImportText(e.target.value)}
+                disabled={bulkImportProgress !== null}
+              />
+
+              {/* Live preview */}
+              {(() => {
+                if (!bulkImportText.trim()) return null
+                const parsed = parseBulkMenuText(bulkImportText)
+                if (parsed.length === 0) {
+                  return (
+                    <p className="mt-2 text-[11px] text-amber-600">
+                      No valid categories or items detected yet. Make sure items use a dash (—) separator.
+                    </p>
+                  )
+                }
+                const totalItems = parsed.reduce((s, c) => s + c.items.length, 0)
+                return (
+                  <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2 space-y-2 max-h-52 overflow-y-auto">
+                    <p className="text-[11px] font-semibold text-emerald-800">
+                      Preview — {parsed.length} {parsed.length === 1 ? 'category' : 'categories'},{' '}
+                      {totalItems} {totalItems === 1 ? 'item' : 'items'}
+                    </p>
+                    {parsed.map((cat, i) => (
+                      <div key={i}>
+                        <p className="text-[11px] font-semibold text-slate-800">{cat.categoryName}</p>
+                        <ul className="mt-0.5 space-y-0.5 pl-3">
+                          {cat.items.map((item, j) => (
+                            <li key={j} className="text-[10px] text-slate-600 flex justify-between">
+                              <span>{item.name}</span>
+                              <span className="font-medium text-slate-800">
+                                {currencySymbol}{item.price.toFixed(2)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
+
+              {/* Progress */}
+              {bulkImportProgress !== null && (
+                <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-[11px] font-medium text-slate-700">
+                    Importing… {bulkImportProgress.done} / {bulkImportProgress.total} items
+                  </p>
+                  <div className="mt-1.5 h-1.5 w-full rounded-full bg-slate-200">
+                    <div
+                      className="h-1.5 rounded-full bg-emerald-500 transition-all"
+                      style={{
+                        width: `${bulkImportProgress.total > 0 ? (bulkImportProgress.done / bulkImportProgress.total) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-4 flex justify-end gap-2 text-xs">
+                <button
+                  type="button"
+                  className="min-h-[44px] touch-manipulation rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  disabled={bulkImportProgress !== null}
+                  onClick={() => {
+                    setBulkImportOpen(false)
+                    setBulkImportText('')
+                    setBulkImportProgress(null)
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="min-h-[44px] touch-manipulation rounded-full bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                  disabled={saving || bulkImportProgress !== null || !bulkImportText.trim() || parseBulkMenuText(bulkImportText).length === 0}
+                  onClick={() => {
+                    const parsed = parseBulkMenuText(bulkImportText)
+                    if (parsed.length === 0) return
+                    void bulkImport(parsed)
+                  }}
+                >
+                  {bulkImportProgress !== null
+                    ? `Importing… (${bulkImportProgress.done}/${bulkImportProgress.total})`
+                    : (() => {
+                        const parsed = parseBulkMenuText(bulkImportText)
+                        if (!bulkImportText.trim() || parsed.length === 0) return 'Import'
+                        const totalItems = parsed.reduce((s, c) => s + c.items.length, 0)
+                        return `Import ${totalItems} item${totalItems === 1 ? '' : 's'} in ${parsed.length} categor${parsed.length === 1 ? 'y' : 'ies'}`
+                      })()}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {pendingDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 overflow-y-auto">
             <div className="w-full max-w-sm rounded-2xl bg-white p-4 shadow-xl my-auto">
