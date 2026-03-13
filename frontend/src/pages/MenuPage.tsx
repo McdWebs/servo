@@ -187,44 +187,26 @@ function MenuPageInner() {
   return (
     <div className="min-h-screen bg-slate-50 pb-20 text-slate-900">
       <div className="mx-auto max-w-md px-4 pb-4 pt-6">
-        <header className="mb-3 rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 shadow-sm shadow-slate-200/40">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              {data.restaurant.logoUrl && (
-                <div className="h-9 w-9 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={data.restaurant.logoUrl}
-                    alt={`${data.restaurant.name} logo`}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              )}
-              <h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-                {data.restaurant.name}
-              </h1>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {tableFromUrl && (
-                <span className="shrink-0 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white">
-                  Table {tableFromUrl}
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchOpen((prev) => !prev)
-                  if (searchOpen) {
-                    setSearchQuery('')
-                  }
-                }}
-                aria-label={searchOpen ? 'Close search' : 'Open search'}
-                className="shrink-0 inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 shadow-sm hover:border-slate-300"
-              >
-                <span aria-hidden="true">🔍</span>
-              </button>
-            </div>
+        <header className="relative mb-2 px-3 pt-1">
+          <div className="flex items-center justify-center">
+            {data.restaurant.logoUrl && (
+              <div className="h-16 w-16 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={data.restaurant.logoUrl}
+                  alt={`${data.restaurant.name} logo`}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            )}
           </div>
+          {tableFromUrl && (
+            <div className="absolute inset-y-2 right-3 flex items-center">
+              <span className="shrink-0 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white">
+                Table {tableFromUrl}
+              </span>
+            </div>
+          )}
           {latestOrderStatus === 'new' && (
             <p className="mt-2 rounded-md bg-amber-50 px-2.5 py-1.5 text-[11px] font-medium text-amber-800">
               Your order was sent to the kitchen.
@@ -242,6 +224,21 @@ function MenuPageInner() {
           )}
         </header>
         <div className="sticky top-0 z-20 mb-3 -mx-1 bg-slate-50 px-1 pt-1 pb-2">
+          {/* <div className="mb-1 flex justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                setSearchOpen((prev) => !prev)
+                if (searchOpen) {
+                  setSearchQuery('')
+                }
+              }}
+              aria-label={searchOpen ? 'Close search' : 'Open search'}
+              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 shadow-sm hover:border-slate-300"
+            >
+              <span aria-hidden="true">🔍</span>
+            </button>
+          </div> */}
           {searchOpen && (
             <div className="flex items-center gap-2">
               <div className="flex-1">
@@ -352,7 +349,7 @@ function MenuPageInner() {
         <div className="flex w-full max-w-md items-center gap-2 rounded-full bg-slate-900 text-slate-50 shadow-lg shadow-slate-900/40 px-3 py-2">
           <button
             type="button"
-            className="flex-1 rounded-full border border-slate-700 bg-slate-800 px-3 py-2 text-[11px] font-medium text-slate-50 shadow-sm hover:bg-slate-700"
+            className="flex-1 whitespace-nowrap rounded-full border border-slate-700 bg-slate-800 px-3 py-2 text-[11px] font-medium text-slate-50 shadow-sm hover:bg-slate-700"
             onClick={() => {
               setCartOpen(false)
               setChatOpen((prev) => !prev)
@@ -362,7 +359,7 @@ function MenuPageInner() {
           </button>
           <button
             type="button"
-            className="rounded-full border border-slate-700 bg-slate-800 px-3 py-2 text-[11px] font-medium text-slate-50 shadow-sm hover:bg-slate-700"
+            className="whitespace-nowrap rounded-full border border-slate-700 bg-slate-800 px-3 py-2 text-[11px] font-medium text-slate-50 shadow-sm hover:bg-slate-700"
             onClick={() => setBillOpen(true)}
           >
             View bill
