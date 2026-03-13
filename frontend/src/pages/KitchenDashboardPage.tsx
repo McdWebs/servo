@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { io, type Socket } from 'socket.io-client'
 import KitchenOrderCard, { type KitchenOrder } from '../components/KitchenOrderCard'
 import emptyCartIllustration from '../assets/empty-cart-illustration.png'
+import { useAuth } from '../components/AuthContext'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000'
 
@@ -27,6 +28,7 @@ interface RestaurantTable {
 
 export default function KitchenDashboardPage() {
   const { restaurantId } = useParams<{ restaurantId: string }>()
+  const { restaurant } = useAuth()
   const [orders, setOrders] = useState<KitchenOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -584,7 +586,10 @@ export default function KitchenDashboardPage() {
       <div className="mx-auto max-w-4xl px-4 py-4">
         <header className="mb-5 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Kitchen</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+              Kitchen
+              {restaurant && restaurantId === restaurant._id ? ` · ${restaurant.name}` : ''}
+            </h1>
             <p className="text-xs text-slate-500">
               Incoming orders and waiter calls in real time.
             </p>

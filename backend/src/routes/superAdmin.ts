@@ -59,7 +59,9 @@ router.patch('/feedback/:id', async (req, res) => {
     if (Object.keys(update).length === 0) {
       return res.status(400).json({ message: 'Provide status and/or adminReply' })
     }
-    const feedback = await OwnerFeedback.findByIdAndUpdate(id, update, { new: true }).lean()
+    const feedback = await OwnerFeedback.findByIdAndUpdate(id, update, {
+      returnDocument: 'after',
+    }).lean()
     if (!feedback) {
       return res.status(404).json({ message: 'Feedback not found' })
     }
@@ -303,7 +305,9 @@ router.patch('/restaurants/:id', async (req, res) => {
       }
     }
 
-    const restaurant = await Restaurant.findByIdAndUpdate(id, update, { new: true }).lean()
+    const restaurant = await Restaurant.findByIdAndUpdate(id, update, {
+      returnDocument: 'after',
+    }).lean()
     if (!restaurant) {
       return res.status(404).json({ message: 'Restaurant not found' })
     }

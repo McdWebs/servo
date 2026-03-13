@@ -34,7 +34,10 @@ const s3 = s3Configured ? new S3Client(s3Config) : null
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
-export async function uploadMenuItemImage(file: Express.Multer.File): Promise<string> {
+async function uploadImageToS3(
+  file: Express.Multer.File,
+  keyPrefix: string
+): Promise<string> {
   if (!s3Configured || !s3 || !bucket || !region) {
     throw new Error(
       'Image storage is not configured. Please set S3_BUCKET_NAME (or S3_MENU_BUCKET), AWS_REGION, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY.'
@@ -64,11 +67,11 @@ export async function uploadMenuItemImage(file: Express.Multer.File): Promise<st
   } else if (file.mimetype === 'image/png') {
     processedBuffer = await image.png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer()
   } else {
-    // image/webp
+    // image/webp or any other allowed type
     processedBuffer = await image.webp({ quality: 80 }).toBuffer()
   }
 
-  const key = `menu-items/${filename}`
+  const key = `${keyPrefix.replace(/\/+$/, '')}/${filename}`
 
   await s3.send(
     new PutObjectCommand({
@@ -82,4 +85,14 @@ export async function uploadMenuItemImage(file: Express.Multer.File): Promise<st
   // Public, direct S3 URL
   return `https://${bucket}.s3.${region}.amazonaws.com/${key}`
 }
+
+export async function uploadMenuItemImage(file: Express.Multer.File): Promise<string> {
+  return uploadImageToS3(file, 'menu-items')
+}
+
+export async function uploadRestaurantLogo(file: Express.Multer.File): Promise<string> {
+  // Logos are typically smaller; reuse the same limits and processing, but with a different key prefix.
+  return uploadImageToS3(file, 'restaurant-logos')
+}
+
 

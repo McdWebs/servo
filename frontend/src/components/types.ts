@@ -41,6 +41,7 @@ export interface Restaurant {
   isSuspended?: boolean
   printerEnabled?: boolean
   printerName?: string
+  logoUrl?: string
 }
 
 export interface CartItem {

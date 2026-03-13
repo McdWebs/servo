@@ -5,7 +5,7 @@ import { MenuCategory } from '../models/MenuCategory'
 import { MenuItem } from '../models/MenuItem'
 import { authenticateOwner } from '../middleware/auth'
 import multer from 'multer'
-import { uploadMenuItemImage } from '../services/s3Client'
+import { uploadMenuItemImage, uploadRestaurantLogo } from '../services/s3Client'
 
 const router = express.Router()
 const upload = multer({
@@ -153,6 +153,7 @@ router.patch('/restaurants/:restaurantId', authenticateOwner, async (req, res) =
     }
 
     const update: Record<string, unknown> = {}
+    let unset: Record<string, 1> | undefined
     if (typeof body.name === 'string' && body.name.trim()) update.name = body.name.trim()
     if (typeof body.currency === 'string' && body.currency.trim())
       update.currency = (body.currency as string).trim().toUpperCase()
@@ -176,14 +177,26 @@ router.patch('/restaurants/:restaurantId', authenticateOwner, async (req, res) =
       if (trimmed) {
         update.aiInstructions = trimmed
       } else {
-        ;(update as any).$unset = { ...((update as any).$unset || {}), aiInstructions: 1 }
+        unset = { ...(unset ?? {}), aiInstructions: 1 }
       }
     }
     if (typeof body.printerEnabled === 'boolean') update.printerEnabled = body.printerEnabled
     if (typeof body.printerName === 'string') update.printerName = body.printerName.trim() || undefined
+    if (typeof body.logoUrl === 'string') {
+      const trimmed = body.logoUrl.trim()
+      if (trimmed) {
+        update.logoUrl = trimmed
+      } else {
+        unset = { ...(unset ?? {}), logoUrl: 1 }
+      }
+    }
+
+    if (unset && Object.keys(unset).length > 0) {
+      ;(update as any).$unset = unset
+    }
 
     const restaurant = await Restaurant.findByIdAndUpdate(restaurantIdParam, update, {
-      new: true,
+      returnDocument: 'after',
     }).lean()
 
     if (!restaurant) {
@@ -197,6 +210,54 @@ router.patch('/restaurants/:restaurantId', authenticateOwner, async (req, res) =
     return res.status(500).json({ message: 'Failed to update restaurant' })
   }
 })
+
+router.post(
+  '/restaurants/:restaurantId/logo',
+  authenticateOwner,
+  upload.single('logo'),
+  async (req, res) => {
+    try {
+      const restaurantIdParam = String(req.params.restaurantId)
+
+      if (!Types.ObjectId.isValid(restaurantIdParam)) {
+        return res.status(400).json({ message: 'Invalid restaurantId' })
+      }
+
+      const ownerRestaurantId = (req as any).ownerRestaurantId as string | undefined
+      if (!ownerRestaurantId || ownerRestaurantId !== restaurantIdParam) {
+        return res.status(403).json({ message: 'Forbidden' })
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: 'Logo image is required' })
+      }
+
+      let logoUrl: string
+      try {
+        logoUrl = await uploadRestaurantLogo(req.file)
+      } catch (err) {
+        const message = (err as Error).message || 'Failed to upload logo'
+        return res.status(400).json({ message })
+      }
+
+      const restaurant = await Restaurant.findByIdAndUpdate(
+        restaurantIdParam,
+        { logoUrl },
+        { returnDocument: 'after' }
+      ).lean()
+
+      if (!restaurant) {
+        return res.status(404).json({ message: 'Restaurant not found' })
+      }
+
+      return res.json(restaurant)
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err)
+      return res.status(500).json({ message: 'Failed to update restaurant logo' })
+    }
+  }
+)
 
 router.post('/restaurants/:restaurantId/categories', authenticateOwner, async (req, res) => {
   try {
@@ -266,7 +327,7 @@ router.patch('/categories/:categoryId', authenticateOwner, async (req, res) => {
       },
       update,
       {
-        new: true,
+        returnDocument: 'after',
       }
     ).lean()
 
@@ -500,7 +561,9 @@ router.patch('/items/:itemId', authenticateOwner, upload.single('image'), async 
       update.available = availableRaw
     }
 
-    const updatedItem = await MenuItem.findByIdAndUpdate(itemIdParam, update, { new: true }).lean()
+    const updatedItem = await MenuItem.findByIdAndUpdate(itemIdParam, update, {
+      returnDocument: 'after',
+    }).lean()
     if (!updatedItem) {
       return res.status(404).json({ message: 'Item not found' })
     }

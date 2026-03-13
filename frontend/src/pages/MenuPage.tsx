@@ -47,6 +47,8 @@ function MenuPageInner() {
   const [billOpen, setBillOpen] = useState(false)
   const [itemDetailOpen, setItemDetailOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [selectedCategoryId, setSelectedCategoryId] = useState<'all' | string>('all')
   const tableFromUrl = searchParams.get('table') ?? undefined
   const tableKey = tableFromUrl ?? 'default'
   const latestOrderIdRef = useRef<string | null>(null)
@@ -175,21 +177,53 @@ function MenuPageInner() {
         .filter((cat) => cat.items.length > 0)
     : data.categories
 
-  const filteredCategories = searchedCategories
+  const filteredCategories =
+    selectedCategoryId === 'all'
+      ? searchedCategories
+      : searchedCategories.filter((cat) => cat._id === selectedCategoryId)
+
+  const hasMultipleCategories = data.categories.length > 1
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 text-slate-900">
       <div className="mx-auto max-w-md px-4 pb-4 pt-6">
         <header className="mb-3 rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 shadow-sm shadow-slate-200/40">
           <div className="flex items-center justify-between gap-2">
-            <h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-              {data.restaurant.name}
-            </h1>
-            {tableFromUrl && (
-              <span className="shrink-0 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white">
-                Table {tableFromUrl}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {data.restaurant.logoUrl && (
+                <div className="h-9 w-9 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={data.restaurant.logoUrl}
+                    alt={`${data.restaurant.name} logo`}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
+              <h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
+                {data.restaurant.name}
+              </h1>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {tableFromUrl && (
+                <span className="shrink-0 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white">
+                  Table {tableFromUrl}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchOpen((prev) => !prev)
+                  if (searchOpen) {
+                    setSearchQuery('')
+                  }
+                }}
+                aria-label={searchOpen ? 'Close search' : 'Open search'}
+                className="shrink-0 inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 shadow-sm hover:border-slate-300"
+              >
+                <span aria-hidden="true">🔍</span>
+              </button>
+            </div>
           </div>
           {latestOrderStatus === 'new' && (
             <p className="mt-2 rounded-md bg-amber-50 px-2.5 py-1.5 text-[11px] font-medium text-amber-800">
@@ -208,17 +242,64 @@ function MenuPageInner() {
           )}
         </header>
         <div className="sticky top-0 z-20 mb-3 -mx-1 bg-slate-50 px-1 pt-1 pb-2">
-          <label htmlFor="menu-search" className="sr-only">
-            Search menu
-          </label>
-          <input
-            id="menu-search"
-            type="search"
-            placeholder="Search dishes…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
-          />
+          {searchOpen && (
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <label htmlFor="menu-search" className="sr-only">
+                  Search menu
+                </label>
+                <input
+                  id="menu-search"
+                  type="search"
+                  placeholder="Search dishes…"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchOpen(false)
+                  setSearchQuery('')
+                }}
+                className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:border-slate-300"
+              >
+                Close
+              </button>
+            </div>
+          )}
+          {hasMultipleCategories && (
+            <div className="mt-2">
+              <nav className="flex gap-1.5 overflow-x-auto pb-1 pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategoryId('all')}
+                  className={`flex-shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                    selectedCategoryId === 'all'
+                      ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                  }`}
+                >
+                  All
+                </button>
+                {data.categories.map((cat) => (
+                  <button
+                    key={cat._id}
+                    type="button"
+                    onClick={() => setSelectedCategoryId(cat._id)}
+                    className={`flex-shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                      selectedCategoryId === cat._id
+                        ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </nav>
+            </div>
+          )}
         </div>
         {/* Category quick-jump nav – commented out for now
         <nav className="sticky top-12 z-20 mb-4 flex justify-center gap-2 overflow-x-auto bg-transparent pb-1 pt-1 text-xs">

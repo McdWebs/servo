@@ -987,11 +987,15 @@ export default function SuperAdminDashboardPage() {
       {deleteId && (
         <div
           className="fixed inset-0 z-20 flex items-center justify-center bg-black/50 p-4"
+          onClick={(e) => e.target === e.currentTarget && cancelDelete()}
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-modal-title"
         >
-          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
+          <div
+            className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 id="delete-modal-title" className="text-sm font-semibold text-slate-900">
               Delete restaurant?
             </h2>

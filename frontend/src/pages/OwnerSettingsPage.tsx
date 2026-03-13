@@ -1,8 +1,10 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../components/AuthContext'
 import { apiFetch } from '../lib/api'
 import type { Restaurant } from '../components/types'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000'
 
 const CURRENCIES = [
   { value: 'USD', label: 'USD ($)' },
@@ -78,6 +80,7 @@ export default function OwnerSettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [logoUploading, setLogoUploading] = useState(false)
 
   useEffect(() => {
     if (!success) return
@@ -164,6 +167,61 @@ export default function OwnerSettingsPage() {
       setError((err as Error).message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleLogoFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (!restaurant || !token) return
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append('logo', file)
+
+    setLogoUploading(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const res = await fetch(`${API_BASE}/api/restaurants/${restaurant._id}/logo`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      })
+      const json = (await res.json()) as Restaurant & { message?: string }
+      if (!res.ok) {
+        throw new Error(json.message ?? 'Failed to upload logo')
+      }
+      updateRestaurant(json)
+      setSuccess('Logo updated')
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setLogoUploading(false)
+      // Allow selecting the same file again if needed
+      e.target.value = ''
+    }
+  }
+
+  const handleRemoveLogo = async () => {
+    if (!restaurant || !token) return
+    setLogoUploading(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const updated = await apiFetch<Restaurant>(`/api/restaurants/${restaurant._id}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify({ logoUrl: '' }),
+      })
+      updateRestaurant(updated)
+      setSuccess('Logo removed')
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setLogoUploading(false)
     }
   }
 
@@ -320,6 +378,47 @@ export default function OwnerSettingsPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+              <div className="space-y-1">
+                <span className={labelClass}>Logo (optional)</span>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
+                    {restaurant.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={restaurant.logoUrl}
+                        alt={`${restaurant.name} logo`}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      (restaurant.name?.[0] ?? 'R')
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleLogoFileChange}
+                      />
+                      <span>{logoUploading ? 'Uploading…' : 'Upload logo'}</span>
+                    </label>
+                    {restaurant.logoUrl && (
+                      <button
+                        type="button"
+                        className="text-[11px] font-medium text-rose-600 hover:text-rose-700"
+                        onClick={handleRemoveLogo}
+                        disabled={logoUploading}
+                      >
+                        Remove logo
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-500">
+                  Shown on the guest menu. Use a square JPG or PNG up to 5MB.
+                </p>
               </div>
               <div className="space-y-1">
                 <label htmlFor="description" className={labelClass}>

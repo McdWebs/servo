@@ -306,7 +306,7 @@ router.patch('/waiter-calls/:callId/handled', async (req, res) => {
     const call = await WaiterCall.findByIdAndUpdate(
       callId,
       { status: 'handled', handledAt: new Date() },
-      { new: true }
+      { returnDocument: 'after' }
     ).lean()
 
     if (!call) {
@@ -337,7 +337,7 @@ router.patch('/orders/:orderId/status', async (req, res) => {
       return res.status(400).json({ message: 'Invalid status' })
     }
 
-    const order = await Order.findByIdAndUpdate(orderId, { status }, { new: true }).lean()
+    const order = await Order.findByIdAndUpdate(orderId, { status }, { returnDocument: 'after' }).lean()
     if (!order) {
       return res.status(404).json({ message: 'Order not found' })
     }

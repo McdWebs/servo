@@ -23,6 +23,8 @@ export interface RestaurantDocument extends Document {
   printerEnabled?: boolean
   /** Optional label for the receipt/kitchen printer (for owner reference). */
   printerName?: string
+  /** Optional logo image URL for guest menu & admin views. */
+  logoUrl?: string
 }
 
 const restaurantSchema = new Schema<RestaurantDocument>({
@@ -44,6 +46,7 @@ const restaurantSchema = new Schema<RestaurantDocument>({
   isSuspended: { type: Boolean, default: false },
   printerEnabled: { type: Boolean, default: false },
   printerName: { type: String, trim: true },
+  logoUrl: { type: String },
 })
 
 export const Restaurant = model<RestaurantDocument>('Restaurant', restaurantSchema)
