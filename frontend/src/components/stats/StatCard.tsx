@@ -5,19 +5,7 @@ interface StatCardProps {
   value: string | number
   sublabel?: string
   icon?: ReactNode
-  accent?: 'emerald' | 'amber' | 'blue' | 'violet' | 'slate'
-}
-
-const accentStyles = {
-  emerald:
-    'border-emerald-200/80 bg-gradient-to-br from-emerald-50/80 to-white text-emerald-800',
-  amber:
-    'border-amber-200/80 bg-gradient-to-br from-amber-50/80 to-white text-amber-800',
-  blue: 'border-blue-200/80 bg-gradient-to-br from-blue-50/80 to-white text-blue-800',
-  violet:
-    'border-violet-200/80 bg-gradient-to-br from-violet-50/80 to-white text-violet-800',
-  slate:
-    'border-slate-200 bg-white shadow-sm text-slate-900',
+  accent?: 'brass' | 'crimson' | 'muted' | 'default'
 }
 
 export default function StatCard({
@@ -25,26 +13,61 @@ export default function StatCard({
   value,
   sublabel,
   icon,
-  accent = 'slate',
+  accent = 'default',
 }: StatCardProps) {
+  const valueColor =
+    accent === 'brass' ? '#C9A962'
+    : accent === 'crimson' ? '#C96070'
+    : '#E8DFD4'
+
   return (
     <div
-      className={`rounded-xl border p-4 transition-all duration-200 hover:shadow-md ${accentStyles[accent]}`}
+      className="relative rounded-[4px] p-4 transition-all duration-300 flourish-sm"
+      style={{
+        backgroundColor: '#251E19',
+        border: '1px solid #4A3F35',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'rgba(201,169,98,0.35)'
+        e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = '#4A3F35'
+        e.currentTarget.style.boxShadow = 'none'
+      }}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-wide opacity-80">
+          <p
+            className="text-[10px] tracking-[0.2em] uppercase mb-1.5"
+            style={{ fontFamily: 'var(--font-display)', color: '#9C8B7A' }}
+          >
             {label}
           </p>
-          <p className="mt-1.5 text-2xl font-bold tabular-nums tracking-tight">
+          <p
+            className="text-2xl tabular-nums"
+            style={{ fontFamily: 'var(--font-display)', color: valueColor, letterSpacing: '0.02em' }}
+          >
             {value}
           </p>
           {sublabel && (
-            <p className="mt-0.5 text-xs opacity-70">{sublabel}</p>
+            <p
+              className="mt-0.5 text-[11px] italic"
+              style={{ fontFamily: 'var(--font-body)', color: '#4A3F35' }}
+            >
+              {sublabel}
+            </p>
           )}
         </div>
         {icon && (
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-white/60 text-lg">
+          <div
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[4px] text-base"
+            style={{
+              backgroundColor: '#1C1714',
+              border: '1px solid #4A3F35',
+              color: '#C9A962',
+            }}
+          >
             {icon}
           </div>
         )}

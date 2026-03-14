@@ -41,118 +41,159 @@ export default function OwnerSignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-8">
-        <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-wider text-slate-500">Servo</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-            Create your restaurant
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ backgroundColor: '#1C1714' }}>
+      <div className="w-full max-w-sm">
+        {/* Wordmark */}
+        <div className="mb-10 text-center">
+          <p
+            className="text-2xl tracking-[0.3em] uppercase mb-3"
+            style={{ fontFamily: 'var(--font-display)', color: '#C9A962' }}
+          >
+            Servo
+          </p>
+          <div className="divider-ornate mx-auto w-48" aria-hidden="true" />
+          <h1
+            className="mt-6 text-3xl"
+            style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}
+          >
+            Register Your Establishment
           </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Set up a restaurant, then you can build your menu and manage orders.
+          <p className="mt-2 text-sm" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
+            Create your restaurant and begin building your menu
           </p>
         </div>
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4 rounded-2xl border border-slate-200 bg-white px-4 py-5 shadow-sm"
+
+        {/* Form card */}
+        <div
+          className="relative rounded-[4px] p-8 flourish-sm"
+          style={{
+            backgroundColor: '#251E19',
+            border: '1px solid #4A3F35',
+            boxShadow: '0 16px 48px rgba(0,0,0,0.5)',
+          }}
         >
-          {error && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-              {error}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div
+                className="rounded-[4px] px-4 py-3 text-sm"
+                style={{
+                  backgroundColor: 'rgba(139,38,53,0.12)',
+                  border: '1px solid rgba(139,38,53,0.35)',
+                  color: '#C96070',
+                  fontFamily: 'var(--font-body)',
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <label htmlFor="restaurantName" className="label-academia">
+                Establishment Name
+              </label>
+              <input
+                id="restaurantName"
+                name="restaurantName"
+                required
+                className="input-academia"
+                placeholder="The Grand Bistro"
+              />
             </div>
-          )}
-          <div className="space-y-1">
-            <label htmlFor="restaurantName" className="text-xs font-medium text-slate-700">
-              Restaurant name
-            </label>
-            <input
-              id="restaurantName"
-              name="restaurantName"
-              required
-              className="w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-              placeholder="Demo Bistro"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="restaurantSlug" className="text-xs font-medium text-slate-700">
-              Public URL slug (optional)
-            </label>
-            <input
-              id="restaurantSlug"
-              name="restaurantSlug"
-              className="w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-              placeholder="my-restaurant"
-            />
-            <p className="mt-1 text-[11px] text-slate-500">
-              This will be used in links like <code>/restaurant/your-slug/menu</code>. If you leave it
-              empty, we&apos;ll generate one from the restaurant name.
-            </p>
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="currency" className="text-xs font-medium text-slate-700">
-              Currency
-            </label>
-            <select
-              id="currency"
-              name="currency"
-              defaultValue="USD"
-              className="w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+
+            <div className="space-y-1.5">
+              <label htmlFor="restaurantSlug" className="label-academia">
+                Public URL Slug
+                <span className="ml-1 normal-case tracking-normal" style={{ color: '#4A3F35' }}>(optional)</span>
+              </label>
+              <input
+                id="restaurantSlug"
+                name="restaurantSlug"
+                className="input-academia"
+                placeholder="the-grand-bistro"
+              />
+              <p className="text-xs mt-1.5" style={{ fontFamily: 'var(--font-body)', color: '#4A3F35' }}>
+                Used in guest links: <em>/restaurant/your-slug/menu</em>
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="currency" className="label-academia">
+                Currency
+              </label>
+              <select
+                id="currency"
+                name="currency"
+                defaultValue="USD"
+                className="input-academia"
+              >
+                {CURRENCIES.map((c) => (
+                  <option key={c.value} value={c.value} style={{ backgroundColor: '#251E19' }}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="divider-ornate divider-ornate-alt" aria-hidden="true" />
+
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="label-academia">
+                Owner Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="input-academia"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="label-academia">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                className="input-academia"
+                placeholder="At least 8 characters"
+              />
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                className="btn-brass w-full"
+                disabled={submitting}
+              >
+                {submitting ? 'Registering…' : 'Create Establishment'}
+              </button>
+            </div>
+          </form>
+
+          <div className="divider-ornate divider-ornate-alt mt-6" aria-hidden="true" />
+
+          <p className="text-center text-sm mt-5" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
+            Already registered?{' '}
+            <Link
+              to="/owner/login"
+              className="transition-colors duration-200"
+              style={{ color: '#C9A962' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#D4B872' }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#C9A962' }}
             >
-              {CURRENCIES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="email" className="text-xs font-medium text-slate-700">
-              Owner email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-              placeholder="you@example.com"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="password" className="text-xs font-medium text-slate-700">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={8}
-              className="w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-              placeholder="At least 8 characters"
-            />
-            <p className="mt-1 text-[11px] text-slate-500">
-              You&apos;ll use this email and password to sign in and manage your restaurant.
-            </p>
-          </div>
-          <button
-            type="submit"
-            className="flex w-full items-center justify-center rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-            disabled={submitting}
-          >
-            {submitting ? 'Creating…' : 'Create restaurant'}
-          </button>
-          <div className="pt-2 text-center text-xs text-slate-600">
-            <span>Already have a restaurant? </span>
-            <Link to="/owner/login" className="font-semibold text-slate-900 underline-offset-2 hover:underline">
               Sign in
             </Link>
-          </div>
-        </form>
+          </p>
+        </div>
       </div>
     </div>
   )
 }
-

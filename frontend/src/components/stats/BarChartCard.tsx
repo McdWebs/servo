@@ -21,7 +21,7 @@ interface BarChartCardProps {
   barColors?: string[]
 }
 
-const DEFAULT_COLORS = ['#10b981', '#34d399', '#6ee7b7'] // emerald scale
+const DEFAULT_COLORS = ['#C9A962', '#B8953F', '#9C8B7A']
 
 export default function BarChartCard({
   title,
@@ -37,8 +37,19 @@ export default function BarChartCard({
   const hasData = safeData.length > 0
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-      <h3 className="mb-4 text-sm font-semibold text-slate-800">{title}</h3>
+    <div
+      className="rounded-[4px] p-5 transition-all duration-300"
+      style={{
+        backgroundColor: '#251E19',
+        border: '1px solid #4A3F35',
+      }}
+    >
+      <h3
+        className="mb-4 text-sm"
+        style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}
+      >
+        {title}
+      </h3>
       <div className="h-[200px] min-h-[200px] w-full min-w-0">
         {hasData ? (
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={200}>
@@ -48,23 +59,28 @@ export default function BarChartCard({
             >
               <XAxis
                 dataKey="name"
-                tick={{ fontSize: 11, fill: '#64748b' }}
+                tick={{ fontSize: 10, fill: '#9C8B7A', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 10, fill: '#64748b' }}
+                tick={{ fontSize: 10, fill: '#9C8B7A', fontFamily: 'var(--font-display)' }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={valueFormatter}
-                width={36}
+                width={40}
               />
               <Tooltip
                 contentStyle={{
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  fontSize: '12px',
+                  borderRadius: '4px',
+                  border: '1px solid #4A3F35',
+                  backgroundColor: '#251E19',
+                  color: '#E8DFD4',
+                  fontSize: '11px',
+                  fontFamily: 'var(--font-display)',
+                  letterSpacing: '0.05em',
                 }}
+                cursor={{ fill: 'rgba(201,169,98,0.04)' }}
                 formatter={(value: unknown) => {
                   const n = Array.isArray(value) ? value[0] : value
                   const num = typeof n === 'number' ? n : Number(n)
@@ -73,10 +89,9 @@ export default function BarChartCard({
                 }}
                 labelFormatter={(label) => (label != null ? String(label) : '')}
               />
-              <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={56}>
+              <Bar dataKey="value" radius={[2, 2, 0, 0]} maxBarSize={56}>
                 {safeData.map((_, index) => (
                   <Cell
-                    // eslint-disable-next-line react/no-array-index-key
                     key={index}
                     fill={barColors[index % barColors.length]}
                   />
@@ -85,8 +100,11 @@ export default function BarChartCard({
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-slate-400">
-            No data
+          <div
+            className="flex h-full items-center justify-center text-xs italic"
+            style={{ fontFamily: 'var(--font-body)', color: '#4A3F35' }}
+          >
+            No data available
           </div>
         )}
       </div>

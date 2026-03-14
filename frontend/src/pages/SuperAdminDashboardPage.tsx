@@ -56,9 +56,8 @@ const CURRENCIES = [
   { value: 'ILS', label: 'ILS (₪)' },
 ] as const
 
-const inputClass =
-  'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400'
-const labelClass = 'text-xs font-medium text-slate-700'
+const inputClass = 'input-academia'
+const labelClass = 'label-academia'
 
 export default function SuperAdminDashboardPage() {
   const { token, superAdmin, logoutSuperAdmin } = useSuperAdminAuth()
@@ -328,655 +327,321 @@ export default function SuperAdminDashboardPage() {
     typeof window !== 'undefined' ? window.location.origin : ''
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div className="min-h-screen" style={{ backgroundColor: '#1C1714', color: '#E8DFD4' }}>
+      {/* Header */}
+      <header
+        className="sticky top-0 z-10 px-4 py-3"
+        style={{ backgroundColor: '#251E19', borderBottom: '1px solid #4A3F35', boxShadow: '0 2px 16px rgba(0,0,0,0.4)' }}
+      >
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <h1 className="text-lg font-semibold text-slate-900">Super Admin</h1>
+          <h1
+            className="text-sm tracking-[0.2em] uppercase"
+            style={{ fontFamily: 'var(--font-display)', color: '#C9A962' }}
+          >
+            Servo — Grand Chamberlain
+          </h1>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-600">{superAdmin?.email ?? ''}</span>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="rounded-full bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700"
-            >
-              Sign out
+            <span className="text-xs italic" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
+              {superAdmin?.email ?? ''}
+            </span>
+            <button type="button" onClick={handleSignOut} className="btn-ghost" style={{ height: '2rem', padding: '0 0.75rem', fontSize: '0.55rem' }}>
+              Sign Out
             </button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-6xl px-4 py-8">
         {error && (
-          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          <div className="mb-6 rounded-[4px] px-4 py-3 text-sm" style={{ backgroundColor: 'rgba(139,38,53,0.1)', border: '1px solid rgba(139,38,53,0.3)', color: '#C96070', fontFamily: 'var(--font-body)' }}>
             {error}
           </div>
         )}
 
-        <div className="mb-6 flex gap-0.5 rounded-lg bg-slate-100/80 p-0.5">
-          <button
-            type="button"
-            onClick={() => setActiveTab('restaurants')}
-            className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === 'restaurants'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Restaurants
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('stats')}
-            className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === 'stats'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Stats
-          </button>
+        {/* Tab nav */}
+        <div className="mb-8 flex gap-1 rounded-[4px] p-1" style={{ backgroundColor: '#251E19', border: '1px solid #4A3F35' }}>
+          {(['restaurants', 'stats'] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className="rounded-[4px] px-4 py-2 text-[11px] tracking-[0.15em] uppercase transition-all duration-200"
+              style={{
+                fontFamily: 'var(--font-display)',
+                ...(activeTab === tab
+                  ? { backgroundColor: 'rgba(201,169,98,0.12)', color: '#C9A962' }
+                  : { backgroundColor: 'transparent', color: '#9C8B7A' }),
+              }}
+            >
+              {tab === 'restaurants' ? 'Establishments' : 'Platform Stats'}
+            </button>
+          ))}
         </div>
 
         {activeTab === 'stats' && (
-        <section className="mb-8 space-y-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Platform stats</h2>
-            <button
-              type="button"
-              onClick={() => fetchStats()}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
-            >
-              <span className="inline-block">↻</span>
-              Refresh
-            </button>
-          </div>
-
-          <div>
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">
-              Overview
-            </h3>
+          <section className="mb-8 space-y-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <span className="overline-volume">I</span>
+                <h2 className="text-2xl" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}>Platform Overview</h2>
+              </div>
+              <button type="button" onClick={() => fetchStats()} className="btn-outline btn-brass-sm" style={{ height: '2.25rem', fontSize: '0.6rem' }}>↻ Refresh</button>
+            </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatCard
-                label="Restaurants"
-                value={stats?.totalRestaurants ?? '—'}
-                accent="emerald"
-              />
-              <StatCard
-                label="Total orders"
-                value={stats?.totalOrders ?? '—'}
-                accent="blue"
-              />
-              <StatCard
-                label="Orders today"
-                value={stats?.ordersToday ?? '—'}
-                accent="violet"
-              />
-              <StatCard
-                label="Total revenue"
-                value={
-                  typeof stats?.totalRevenue === 'number'
-                    ? new Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      }).format(stats.totalRevenue)
-                    : '—'
-                }
-                accent="slate"
-              />
+              <StatCard label="Establishments" value={stats?.totalRestaurants ?? '—'} accent="brass" />
+              <StatCard label="Total orders" value={stats?.totalOrders ?? '—'} accent="brass" />
+              <StatCard label="Orders today" value={stats?.ordersToday ?? '—'} />
+              <StatCard label="Total revenue" value={typeof stats?.totalRevenue === 'number' ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(stats.totalRevenue) : '—'} />
             </div>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <BarChartCard
-              title="Orders by period"
-              data={[
-                { name: 'Today', value: stats?.ordersToday ?? 0 },
-                { name: 'This week', value: stats?.ordersThisWeek ?? 0 },
-                { name: 'This month', value: stats?.ordersThisMonth ?? 0 },
-              ]}
-            />
-            <BarChartCard
-              title="Platform engagement (this week)"
-              data={[
-                { name: 'Waiter calls', value: stats?.waiterCallsHandledThisWeek ?? 0 },
-                { name: 'Chat sessions', value: stats?.chatSessionsThisWeek ?? 0 },
-              ]}
-              barColors={['#f59e0b', '#8b5cf6']}
-            />
-          </div>
-
-          <div>
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">
-              Operations & support
-            </h3>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              <StatCard
-                label="Open waiter calls"
-                value={stats?.openWaiterCalls ?? '—'}
-                accent="amber"
-              />
-              <StatCard
-                label="Waiter calls handled"
-                value={stats?.waiterCallsHandled ?? '—'}
-                accent="slate"
-              />
-              <StatCard
-                label="Avg response (min)"
-                value={
-                  typeof stats?.avgWaiterResponseMinutes === 'number'
-                    ? stats.avgWaiterResponseMinutes.toFixed(1)
-                    : '—'
-                }
-                accent="slate"
-              />
-              <StatCard
-                label="Chat sessions"
-                value={stats?.chatSessionsTotal ?? '—'}
-                sublabel={`${stats?.chatSessionsThisWeek ?? 0} this week`}
-                accent="violet"
-              />
-              <StatCard
-                label="Feedback / bugs"
-                value={stats?.totalFeedback ?? '—'}
-                accent="slate"
-              />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <BarChartCard title="Orders by Period" data={[{ name: 'Today', value: stats?.ordersToday ?? 0 }, { name: 'This week', value: stats?.ordersThisWeek ?? 0 }, { name: 'This month', value: stats?.ordersThisMonth ?? 0 }]} />
+              <BarChartCard title="Platform Engagement (This Week)" data={[{ name: 'Waiter calls', value: stats?.waiterCallsHandledThisWeek ?? 0 }, { name: 'Chat sessions', value: stats?.chatSessionsThisWeek ?? 0 }]} barColors={['#C9A962', '#9C8B7A']} />
             </div>
-          </div>
-        </section>
+            <div>
+              <div className="mb-4 flex items-center gap-3">
+                <span className="overline-volume" style={{ marginBottom: 0 }}>II</span>
+                <h3 className="text-lg" style={{ fontFamily: 'var(--font-heading)', color: '#9C8B7A', fontWeight: 400 }}>Operations & Support</h3>
+                <div className="flex-1 h-px" style={{ backgroundColor: '#4A3F35' }} />
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                <StatCard label="Open waiter calls" value={stats?.openWaiterCalls ?? '—'} />
+                <StatCard label="Waiter calls handled" value={stats?.waiterCallsHandled ?? '—'} />
+                <StatCard label="Avg response (min)" value={typeof stats?.avgWaiterResponseMinutes === 'number' ? stats.avgWaiterResponseMinutes.toFixed(1) : '—'} />
+                <StatCard label="Chat sessions" value={stats?.chatSessionsTotal ?? '—'} sublabel={`${stats?.chatSessionsThisWeek ?? 0} this week`} accent="brass" />
+                <StatCard label="Feedback / bugs" value={stats?.totalFeedback ?? '—'} />
+              </div>
+            </div>
+          </section>
         )}
 
         {activeTab === 'restaurants' && (
-        <>
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 bg-slate-50/80 px-5 py-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-baseline gap-2">
-                <h2 className="text-base font-semibold text-slate-900">Restaurants</h2>
-                <span className="text-sm text-slate-500">{total} total</span>
+          <>
+            <section className="overflow-hidden rounded-[4px] mb-8" style={{ border: '1px solid #4A3F35' }}>
+              <div className="px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" style={{ borderBottom: '1px solid #4A3F35', backgroundColor: '#251E19' }}>
+                <div className="flex items-baseline gap-2">
+                  <h2 className="text-xl" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}>Establishments</h2>
+                  <span className="text-xs italic" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>{total} total</span>
+                </div>
+                <input
+                  type="search"
+                  placeholder="Search by name or slug…"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="input-academia sm:max-w-xs"
+                  style={{ height: '2.5rem', fontSize: '13px' }}
+                />
               </div>
-              <input
-                type="search"
-                placeholder="Search by name or slug…"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-1 focus:ring-slate-400 sm:max-w-xs"
-              />
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            {loading ? (
-              <div className="px-5 py-12 text-center text-sm text-slate-500">Loading…</div>
-            ) : list.length === 0 ? (
-              <div className="px-5 py-12 text-center text-sm text-slate-500">
-                No restaurants found.
+              <div className="overflow-x-auto">
+                {loading ? (
+                  <div className="px-5 py-12 text-center text-sm italic" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>Loading…</div>
+                ) : list.length === 0 ? (
+                  <div className="px-5 py-12 text-center text-sm italic" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>No establishments found.</div>
+                ) : (
+                  <table className="w-full min-w-[640px] text-sm">
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #4A3F35', backgroundColor: 'rgba(74,63,53,0.3)' }}>
+                        {['Name', 'Slug', 'Owner', 'Status', ''].map((h) => (
+                          <th key={h} className={`px-5 py-3 text-left text-[10px] tracking-[0.2em] uppercase ${h === '' ? 'text-right' : ''}`} style={{ fontFamily: 'var(--font-display)', color: '#9C8B7A' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {list.map(({ restaurant, ownerEmail }) => (
+                        <tr key={restaurant._id} style={{ borderBottom: '1px solid rgba(74,63,53,0.4)' }}>
+                          <td className="px-5 py-3" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}>{restaurant.name}</td>
+                          <td className="px-5 py-3 text-xs" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A', fontStyle: 'italic' }}>{restaurant.slug}</td>
+                          <td className="px-5 py-3 text-xs" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>{ownerEmail ?? '—'}</td>
+                          <td className="px-5 py-3">
+                            <span className={restaurant.isSuspended ? 'status-error' : 'status-ready'}>
+                              {restaurant.isSuspended ? 'Suspended' : 'Active'}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-right">
+                            <div className="flex flex-wrap justify-end gap-1.5">
+                              {[
+                                { label: 'Edit', onClick: () => openEdit(restaurant._id), danger: false },
+                                { label: restaurant.isSuspended ? 'Resume' : 'Suspend', onClick: () => toggleSuspend(restaurant._id, !restaurant.isSuspended), danger: false },
+                              ].map(({ label, onClick, danger }) => (
+                                <button key={label} type="button" onClick={onClick}
+                                  className="rounded-[4px] border px-2.5 py-1 text-[10px] tracking-[0.1em] uppercase transition-all duration-150"
+                                  style={{ fontFamily: 'var(--font-display)', color: danger ? '#C96070' : '#9C8B7A', borderColor: danger ? 'rgba(139,38,53,0.3)' : '#4A3F35', backgroundColor: 'transparent' }}
+                                >
+                                  {label}
+                                </button>
+                              ))}
+                              <button type="button" onClick={() => setDeleteId(restaurant._id)}
+                                className="rounded-[4px] border px-2.5 py-1 text-[10px] tracking-[0.1em] uppercase transition-all duration-150"
+                                style={{ fontFamily: 'var(--font-display)', color: '#C96070', borderColor: 'rgba(139,38,53,0.3)', backgroundColor: 'transparent' }}
+                              >
+                                Delete
+                              </button>
+                              <a href={`${baseUrl}/restaurant/${restaurant.slug}/menu`} target="_blank" rel="noopener noreferrer"
+                                className="inline-flex rounded-[4px] border px-2.5 py-1 text-[10px] tracking-[0.1em] uppercase transition-all duration-150"
+                                style={{ fontFamily: 'var(--font-display)', color: '#9C8B7A', borderColor: '#4A3F35' }}
+                              >
+                                Guest Menu
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
-            ) : (
-              <table className="w-full min-w-[640px] text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/60 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
-                    <th className="px-5 py-3">Name</th>
-                    <th className="px-5 py-3">Slug</th>
-                    <th className="px-5 py-3">Owner</th>
-                    <th className="px-5 py-3">Status</th>
-                    <th className="px-5 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {list.map(({ restaurant, ownerEmail }) => (
-                    <tr
-                      key={restaurant._id}
-                      className="border-b border-slate-100 transition-colors hover:bg-slate-50/70"
-                    >
-                      <td className="px-5 py-3 font-medium text-slate-900">{restaurant.name}</td>
-                      <td className="px-5 py-3 font-mono text-xs text-slate-600">{restaurant.slug}</td>
-                      <td className="px-5 py-3 text-slate-600">{ownerEmail ?? '—'}</td>
-                      <td className="px-5 py-3">
-                        <span
-                          className={
-                            restaurant.isSuspended
-                              ? 'inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800'
-                              : 'inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800'
-                          }
-                        >
-                          {restaurant.isSuspended ? 'Suspended' : 'Active'}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <div className="flex flex-wrap justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openEdit(restaurant._id)}
-                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:border-slate-300"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              toggleSuspend(restaurant._id, !restaurant.isSuspended)
-                            }
-                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:border-slate-300"
-                          >
-                            {restaurant.isSuspended ? 'Resume' : 'Suspend'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteId(restaurant._id)}
-                            className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 transition-colors hover:bg-rose-100 hover:border-rose-300"
-                          >
-                            Delete
-                          </button>
-                          <a
-                            href={`${baseUrl}/restaurant/${restaurant.slug}/menu`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900"
-                          >
-                            Guest menu
-                          </a>
-                          <a
-                            href={`${baseUrl}/kitchen/${restaurant._id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900"
-                          >
-                            Kitchen
-                          </a>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </section>
+            </section>
 
-        <section className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-4 py-3">
-            <h2 className="text-sm font-semibold text-slate-900">Feedback / Bug reports</h2>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Messages from restaurant owners (feedback and bug reports).
-            </p>
-          </div>
-          <div className="max-h-96 overflow-y-auto">
-            {feedbackLoading ? (
-              <div className="px-4 py-8 text-center text-sm text-slate-500">Loading…</div>
-            ) : feedbackList.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-slate-500">
-                No feedback or bug reports yet.
+            {/* Feedback section */}
+            <section className="rounded-[4px]" style={{ border: '1px solid #4A3F35' }}>
+              <div className="px-5 py-4" style={{ borderBottom: '1px solid #4A3F35', backgroundColor: '#251E19' }}>
+                <h2 className="text-xl" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}>Owner Correspondence</h2>
+                <p className="text-xs mt-1 italic" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>Feedback and bug reports from restaurant owners.</p>
               </div>
-            ) : (
-              <ul className="divide-y divide-slate-100">
-                {feedbackList.map((item) => (
-                  <li key={item._id} className="px-4 py-3">
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span
-                        className={
-                          item.type === 'bug'
-                            ? 'rounded-full bg-rose-100 px-2 py-0.5 font-medium text-rose-800'
-                            : 'rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-700'
-                        }
-                      >
-                        {item.type === 'bug' ? 'Bug' : 'Feedback'}
-                      </span>
-                      <span
-                        className={
-                          (item.status ?? 'new') === 'replied'
-                            ? 'rounded-full bg-emerald-100 px-2 py-0.5 font-medium text-emerald-800'
-                            : (item.status ?? 'new') === 'read'
-                              ? 'rounded-full bg-sky-100 px-2 py-0.5 font-medium text-sky-800'
-                              : 'rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800'
-                        }
-                      >
-                        {(item.status ?? 'new') === 'new'
-                          ? 'New'
-                          : (item.status ?? 'new') === 'read'
-                            ? 'Seen'
-                            : 'Replied'}
-                      </span>
-                      <span className="font-medium text-slate-900">{item.restaurantName}</span>
-                      <span className="text-slate-500">{item.ownerEmail}</span>
-                      <span className="text-slate-400">
-                        {new Date(item.createdAt).toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="mt-1.5 text-sm text-slate-700 whitespace-pre-wrap">{item.message}</p>
-                    {(item.status ?? 'new') === 'replied' && item.adminReply && (
-                      <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5">
-                        <p className="text-[11px] font-medium text-slate-600">Your reply</p>
-                        <p className="mt-0.5 text-sm text-slate-700 whitespace-pre-wrap">
-                          {item.adminReply}
-                        </p>
-                        {item.adminRepliedAt && (
-                          <p className="mt-1 text-[10px] text-slate-500">
-                            {new Date(item.adminRepliedAt).toLocaleString()}
-                          </p>
+              <div className="max-h-96 overflow-y-auto">
+                {feedbackLoading ? (
+                  <div className="px-5 py-8 text-center text-sm italic" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>Loading…</div>
+                ) : feedbackList.length === 0 ? (
+                  <div className="px-5 py-8 text-center text-sm italic" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>No correspondence yet.</div>
+                ) : (
+                  <ul>
+                    {feedbackList.map((item, i) => (
+                      <li key={item._id} className="px-5 py-4" style={{ borderBottom: i < feedbackList.length - 1 ? '1px solid rgba(74,63,53,0.4)' : 'none' }}>
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <span className="rounded-[2px] px-2 py-0.5 text-[10px] tracking-[0.1em] uppercase"
+                            style={{ fontFamily: 'var(--font-display)', backgroundColor: item.type === 'bug' ? 'rgba(139,38,53,0.12)' : 'rgba(74,63,53,0.3)', color: item.type === 'bug' ? '#C96070' : '#9C8B7A', border: `1px solid ${item.type === 'bug' ? 'rgba(139,38,53,0.3)' : '#4A3F35'}` }}>
+                            {item.type === 'bug' ? 'Bug' : 'Feedback'}
+                          </span>
+                          <span className="text-xs" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4' }}>{item.restaurantName}</span>
+                          <span className="text-xs italic" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>{item.ownerEmail}</span>
+                          <span className="text-xs italic" style={{ fontFamily: 'var(--font-body)', color: '#4A3F35' }}>{new Date(item.createdAt).toLocaleString()}</span>
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap mb-3" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>{item.message}</p>
+                        {(item.status ?? 'new') === 'replied' && item.adminReply && (
+                          <div className="mb-3 rounded-[4px] p-3" style={{ backgroundColor: 'rgba(107,142,101,0.06)', border: '1px solid rgba(107,142,101,0.2)' }}>
+                            <p className="text-[10px] tracking-[0.12em] uppercase mb-1" style={{ fontFamily: 'var(--font-display)', color: '#8EAF88' }}>Your Reply</p>
+                            <p className="text-sm whitespace-pre-wrap" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>{item.adminReply}</p>
+                          </div>
                         )}
-                      </div>
-                    )}
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {(item.status ?? 'new') === 'new' && (
-                        <button
-                          type="button"
-                          disabled={markingReadId === item._id}
-                          onClick={() => handleMarkFeedbackRead(item._id)}
-                          className="rounded bg-sky-100 px-2 py-1 text-xs font-medium text-sky-800 hover:bg-sky-200 disabled:opacity-50"
-                        >
-                          {markingReadId === item._id ? 'Updating…' : 'Mark as read'}
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setReplyingId(replyingId === item._id ? null : item._id)
-                          setReplyText(item.adminReply ?? '')
-                        }}
-                        className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
-                      >
-                        {replyingId === item._id ? 'Cancel reply' : 'Reply'}
-                      </button>
-                    </div>
-                    {replyingId === item._id && (
-                      <div className="mt-2 rounded-lg border border-slate-200 bg-white p-2">
-                        <textarea
-                          rows={3}
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          placeholder="Type your reply to the owner…"
-                          className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none"
-                        />
-                        <div className="mt-2 flex justify-end gap-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setReplyingId(null)
-                              setReplyText('')
-                            }}
-                            className="rounded bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-300"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="button"
-                            disabled={replySaving || !replyText.trim()}
-                            onClick={() => handleReplySubmit(item._id)}
-                            className="rounded bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                          >
-                            {replySaving ? 'Sending…' : 'Send reply'}
+                        <div className="flex flex-wrap gap-1.5">
+                          {(item.status ?? 'new') === 'new' && (
+                            <button type="button" disabled={markingReadId === item._id} onClick={() => handleMarkFeedbackRead(item._id)}
+                              className="rounded-[4px] border px-2.5 py-1 text-[10px] tracking-[0.1em] uppercase transition-all duration-150 disabled:opacity-50"
+                              style={{ fontFamily: 'var(--font-display)', color: '#C9A962', borderColor: 'rgba(201,169,98,0.3)', backgroundColor: 'rgba(201,169,98,0.06)' }}>
+                              {markingReadId === item._id ? 'Updating…' : 'Mark as Read'}
+                            </button>
+                          )}
+                          <button type="button" onClick={() => { setReplyingId(replyingId === item._id ? null : item._id); setReplyText(item.adminReply ?? '') }}
+                            className="rounded-[4px] border px-2.5 py-1 text-[10px] tracking-[0.1em] uppercase transition-all duration-150"
+                            style={{ fontFamily: 'var(--font-display)', color: '#9C8B7A', borderColor: '#4A3F35', backgroundColor: 'transparent' }}>
+                            {replyingId === item._id ? 'Cancel' : 'Reply'}
                           </button>
                         </div>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-        </>
+                        {replyingId === item._id && (
+                          <div className="mt-3 rounded-[4px] p-3" style={{ backgroundColor: '#1C1714', border: '1px solid #4A3F35' }}>
+                            <textarea rows={3} value={replyText} onChange={(e) => setReplyText(e.target.value)}
+                              placeholder="Type your reply to the owner…" className="input-academia mb-3" style={{ minHeight: '4rem', fontSize: '13px' }} />
+                            <div className="flex justify-end gap-2">
+                              <button type="button" onClick={() => { setReplyingId(null); setReplyText('') }} className="btn-ghost" style={{ height: '2rem', padding: '0 0.75rem', fontSize: '0.55rem' }}>Cancel</button>
+                              <button type="button" disabled={replySaving || !replyText.trim()} onClick={() => handleReplySubmit(item._id)} className="btn-brass btn-brass-sm" style={{ height: '2rem', padding: '0 0.75rem', fontSize: '0.55rem' }}>
+                                {replySaving ? 'Sending…' : 'Send Reply'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </section>
+          </>
         )}
       </main>
 
       {/* Edit modal */}
       {editId && (
-        <div
-          className="fixed inset-0 z-20 flex items-center justify-center bg-black/50 p-4"
-          onClick={(e) => e.target === e.currentTarget && closeEdit()}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-modal-title"
-        >
-          <div
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 border-b border-slate-200 bg-white px-4 py-3">
-              <h2 id="edit-modal-title" className="text-sm font-semibold text-slate-900">
-                Edit restaurant
-              </h2>
-              <button
-                type="button"
-                onClick={closeEdit}
-                className="absolute right-4 top-3 text-slate-400 hover:text-slate-600"
-                aria-label="Close"
-              >
-                ×
-              </button>
+        <div className="fixed inset-0 z-20 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+          onClick={(e) => e.target === e.currentTarget && closeEdit()} role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[4px]" style={{ backgroundColor: '#251E19', border: '1px solid #4A3F35', boxShadow: '0 24px 64px rgba(0,0,0,0.7)' }}
+            onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #4A3F35', backgroundColor: '#251E19' }}>
+              <h2 id="edit-modal-title" className="text-xl" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}>Edit Establishment</h2>
+              <button type="button" onClick={closeEdit} className="btn-ghost" style={{ height: '2rem', padding: '0 0.5rem', fontSize: '0.55rem' }} aria-label="Close">Close</button>
             </div>
-            <form onSubmit={handleEditSubmit} className="space-y-4 p-4">
+            <form onSubmit={handleEditSubmit} className="space-y-4 p-6">
               {editError && (
-                <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                  {editError}
-                </div>
+                <div className="rounded-[4px] px-4 py-3 text-sm" style={{ backgroundColor: 'rgba(139,38,53,0.1)', border: '1px solid rgba(139,38,53,0.3)', color: '#C96070', fontFamily: 'var(--font-body)' }}>{editError}</div>
               )}
-              <div className="space-y-2">
-                <label htmlFor="edit-name" className={labelClass}>
-                  Name
-                </label>
-                <input
-                  id="edit-name"
-                  value={editForm.name as string}
-                  onChange={(e) => handleEditChange('name', e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-slug" className={labelClass}>
-                  Slug
-                </label>
-                <input
-                  id="edit-slug"
-                  value={editForm.slug as string}
-                  onChange={(e) => handleEditChange('slug', e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-currency" className={labelClass}>
-                  Currency
-                </label>
-                <select
-                  id="edit-currency"
-                  value={editForm.currency as string}
-                  onChange={(e) => handleEditChange('currency', e.target.value)}
-                  className={inputClass}
-                >
-                  {CURRENCIES.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
+              {[
+                { id: 'edit-name', label: 'Name', field: 'name', type: 'text' },
+                { id: 'edit-slug', label: 'Slug', field: 'slug', type: 'text' },
+                { id: 'edit-address', label: 'Address', field: 'address', type: 'text' },
+                { id: 'edit-phone', label: 'Phone', field: 'phone', type: 'text' },
+                { id: 'edit-contactEmail', label: 'Contact Email', field: 'contactEmail', type: 'email' },
+                { id: 'edit-restaurantType', label: 'Restaurant Type', field: 'restaurantType', type: 'text' },
+                { id: 'edit-timezone', label: 'Timezone', field: 'timezone', type: 'text' },
+                { id: 'edit-openingHoursNote', label: 'Opening Hours', field: 'openingHoursNote', type: 'text' },
+              ].map(({ id, label, field, type }) => (
+                <div key={id} className="space-y-1.5">
+                  <label htmlFor={id} className="label-academia">{label}</label>
+                  <input id={id} type={type} value={editForm[field] as string}
+                    onChange={(e) => handleEditChange(field, e.target.value)} className="input-academia" />
+                </div>
+              ))}
+              <div className="space-y-1.5">
+                <label htmlFor="edit-currency" className="label-academia">Currency</label>
+                <select id="edit-currency" value={editForm.currency as string}
+                  onChange={(e) => handleEditChange('currency', e.target.value)} className="input-academia">
+                  {CURRENCIES.map((c) => (<option key={c.value} value={c.value} style={{ backgroundColor: '#251E19' }}>{c.label}</option>))}
                 </select>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-address" className={labelClass}>
-                  Address
-                </label>
-                <input
-                  id="edit-address"
-                  value={editForm.address as string}
-                  onChange={(e) => handleEditChange('address', e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-phone" className={labelClass}>
-                  Phone
-                </label>
-                <input
-                  id="edit-phone"
-                  value={editForm.phone as string}
-                  onChange={(e) => handleEditChange('phone', e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-contactEmail" className={labelClass}>
-                  Contact email
-                </label>
-                <input
-                  id="edit-contactEmail"
-                  type="email"
-                  value={editForm.contactEmail as string}
-                  onChange={(e) => handleEditChange('contactEmail', e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-restaurantType" className={labelClass}>
-                  Restaurant type
-                </label>
-                <input
-                  id="edit-restaurantType"
-                  value={editForm.restaurantType as string}
-                  onChange={(e) => handleEditChange('restaurantType', e.target.value)}
-                  className={inputClass}
-                  placeholder="e.g. Italian, Cafe"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-description" className={labelClass}>
-                  Description
-                </label>
-                <textarea
-                  id="edit-description"
-                  value={editForm.description as string}
+              <div className="space-y-1.5">
+                <label htmlFor="edit-description" className="label-academia">Description</label>
+                <textarea id="edit-description" value={editForm.description as string}
                   onChange={(e) => handleEditChange('description', e.target.value)}
-                  className="min-h-[60px] w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                  rows={2}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-timezone" className={labelClass}>
-                  Timezone
-                </label>
-                <input
-                  id="edit-timezone"
-                  value={editForm.timezone as string}
-                  onChange={(e) => handleEditChange('timezone', e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-openingHoursNote" className={labelClass}>
-                  Opening hours note
-                </label>
-                <input
-                  id="edit-openingHoursNote"
-                  value={editForm.openingHoursNote as string}
-                  onChange={(e) => handleEditChange('openingHoursNote', e.target.value)}
-                  className={inputClass}
-                />
+                  className="input-academia" rows={2} style={{ minHeight: '4rem', fontSize: '13px' }} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <label htmlFor="edit-taxRatePercent" className={labelClass}>
-                    Tax %
-                  </label>
-                  <input
-                    id="edit-taxRatePercent"
-                    type="number"
-                    min={0}
-                    step={0.01}
-                    value={editForm.taxRatePercent as number}
-                    onChange={(e) =>
-                      handleEditChange(
-                        'taxRatePercent',
-                        e.target.value === '' ? '' : parseFloat(e.target.value)
-                      )
-                    }
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="edit-serviceChargePercent" className={labelClass}>
-                    Service charge %
-                  </label>
-                  <input
-                    id="edit-serviceChargePercent"
-                    type="number"
-                    min={0}
-                    step={0.01}
-                    value={editForm.serviceChargePercent as number}
-                    onChange={(e) =>
-                      handleEditChange(
-                        'serviceChargePercent',
-                        e.target.value === '' ? '' : parseFloat(e.target.value)
-                      )
-                    }
-                    className={inputClass}
-                  />
-                </div>
+                {[{ id: 'edit-taxRatePercent', label: 'Tax %', field: 'taxRatePercent' }, { id: 'edit-serviceChargePercent', label: 'Service Charge %', field: 'serviceChargePercent' }].map(({ id, label, field }) => (
+                  <div key={id} className="space-y-1.5">
+                    <label htmlFor={id} className="label-academia">{label}</label>
+                    <input id={id} type="number" min={0} step={0.01} value={editForm[field] as number}
+                      onChange={(e) => handleEditChange(field, e.target.value === '' ? '' : parseFloat(e.target.value))}
+                      className="input-academia" style={{ height: '2.75rem', fontSize: '13px' }} />
+                  </div>
+                ))}
               </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-orderLeadTimeMinutes" className={labelClass}>
-                  Order lead time (minutes)
-                </label>
-                <input
-                  id="edit-orderLeadTimeMinutes"
-                  type="number"
-                  min={0}
-                  value={editForm.orderLeadTimeMinutes as number}
-                  onChange={(e) =>
-                    handleEditChange('orderLeadTimeMinutes', parseInt(e.target.value, 10) || 0)
-                  }
-                  className={inputClass}
-                />
+              <div className="space-y-1.5">
+                <label htmlFor="edit-orderLeadTimeMinutes" className="label-academia">Order Lead Time (min)</label>
+                <input id="edit-orderLeadTimeMinutes" type="number" min={0} value={editForm.orderLeadTimeMinutes as number}
+                  onChange={(e) => handleEditChange('orderLeadTimeMinutes', parseInt(e.target.value, 10) || 0)}
+                  className="input-academia" style={{ height: '2.75rem', fontSize: '13px' }} />
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  id="edit-allowOrders"
-                  type="checkbox"
-                  checked={Boolean(editForm.allowOrders)}
-                  onChange={(e) => handleEditChange('allowOrders', e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300"
-                />
-                <label htmlFor="edit-allowOrders" className={labelClass}>
-                  Allow orders
+              {[
+                { id: 'edit-allowOrders', label: 'Allow Orders', field: 'allowOrders' },
+                { id: 'edit-isSuspended', label: 'Suspended', field: 'isSuspended' },
+              ].map(({ id, label, field }) => (
+                <label key={id} className="flex items-center gap-3 cursor-pointer">
+                  <div className="relative h-5 w-9 rounded-full transition-colors duration-200 shrink-0"
+                    style={{ backgroundColor: Boolean(editForm[field]) ? '#C9A962' : '#4A3F35' }}
+                    onClick={() => handleEditChange(field, !editForm[field])}>
+                    <div className="absolute top-0.5 h-4 w-4 rounded-full transition-transform duration-200"
+                      style={{ backgroundColor: Boolean(editForm[field]) ? '#1C1714' : '#3D332B', transform: Boolean(editForm[field]) ? 'translateX(1.25rem)' : 'translateX(0.125rem)' }} />
+                  </div>
+                  <input id={id} type="checkbox" checked={Boolean(editForm[field])}
+                    onChange={(e) => handleEditChange(field, e.target.checked)} className="sr-only" />
+                  <span className="label-academia" style={{ marginBottom: 0 }}>{label}</span>
                 </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  id="edit-isSuspended"
-                  type="checkbox"
-                  checked={Boolean(editForm.isSuspended)}
-                  onChange={(e) => handleEditChange('isSuspended', e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300"
-                />
-                <label htmlFor="edit-isSuspended" className={labelClass}>
-                  Suspended (restaurant disabled)
-                </label>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-aiInstructions" className={labelClass}>
-                  AI instructions
-                </label>
-                <textarea
-                  id="edit-aiInstructions"
-                  value={editForm.aiInstructions as string}
+              ))}
+              <div className="space-y-1.5">
+                <label htmlFor="edit-aiInstructions" className="label-academia">AI Instructions</label>
+                <textarea id="edit-aiInstructions" value={editForm.aiInstructions as string}
                   onChange={(e) => handleEditChange('aiInstructions', e.target.value)}
-                  className="min-h-[60px] w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                  rows={2}
-                />
+                  className="input-academia" rows={2} style={{ minHeight: '4rem', fontSize: '13px' }} />
               </div>
               <div className="flex gap-2 pt-2">
-                <button
-                  type="submit"
-                  disabled={editSaving}
-                  className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
-                >
-                  {editSaving ? 'Saving…' : 'Save'}
-                </button>
-                <button
-                  type="button"
-                  onClick={closeEdit}
-                  className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
+                <button type="submit" disabled={editSaving} className="btn-brass btn-brass-sm">{editSaving ? 'Saving…' : 'Save Changes'}</button>
+                <button type="button" onClick={closeEdit} className="btn-outline btn-brass-sm">Cancel</button>
               </div>
             </form>
           </div>
@@ -985,39 +650,18 @@ export default function SuperAdminDashboardPage() {
 
       {/* Delete confirm */}
       {deleteId && (
-        <div
-          className="fixed inset-0 z-20 flex items-center justify-center bg-black/50 p-4"
-          onClick={(e) => e.target === e.currentTarget && cancelDelete()}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="delete-modal-title"
-        >
-          <div
-            className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 id="delete-modal-title" className="text-sm font-semibold text-slate-900">
-              Delete restaurant?
-            </h2>
-            <p className="mt-2 text-xs text-slate-600">
-              This will permanently delete the restaurant, its owner account, menu, tables, and
-              orders. This cannot be undone.
+        <div className="fixed inset-0 z-20 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+          onClick={(e) => e.target === e.currentTarget && cancelDelete()} role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+          <div className="relative w-full max-w-sm rounded-[4px] p-8 flourish-sm" style={{ backgroundColor: '#251E19', border: '1px solid #4A3F35', boxShadow: '0 16px 48px rgba(0,0,0,0.7)' }}
+            onClick={(e) => e.stopPropagation()}>
+            <span className="overline-volume" style={{ color: '#C96070' }}>Irreversible Action</span>
+            <h2 id="delete-modal-title" className="text-xl mb-2" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}>Delete Establishment?</h2>
+            <p className="text-sm mb-6" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
+              This will permanently delete the establishment, its owner account, menu, tables, and all orders. This action cannot be undone.
             </p>
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={doDelete}
-                className="rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
-              >
-                Delete
-              </button>
-              <button
-                type="button"
-                onClick={cancelDelete}
-                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Cancel
-              </button>
+            <div className="flex gap-3">
+              <button type="button" onClick={doDelete} className="btn-danger btn-brass-sm">Delete Permanently</button>
+              <button type="button" onClick={cancelDelete} className="btn-outline btn-brass-sm">Cancel</button>
             </div>
           </div>
         </div>

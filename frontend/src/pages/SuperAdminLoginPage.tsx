@@ -33,62 +33,99 @@ export default function SuperAdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-8">
-        <div className="mb-8">
-          <p className="text-sm font-semibold uppercase tracking-wider text-slate-500">Servo</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-            Super Admin
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ backgroundColor: '#1C1714' }}>
+      <div className="w-full max-w-sm">
+        {/* Wordmark */}
+        <div className="mb-10 text-center">
+          <p
+            className="text-2xl tracking-[0.3em] uppercase mb-3"
+            style={{ fontFamily: 'var(--font-display)', color: '#C9A962' }}
+          >
+            Servo
+          </p>
+          <div className="divider-ornate mx-auto w-48" aria-hidden="true" />
+          <span
+            className="overline-volume mt-6 block"
+            style={{ color: '#9C8B7A' }}
+          >
+            Restricted Access
+          </span>
+          <h1
+            className="mt-2 text-3xl"
+            style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}
+          >
+            Grand Chamberlain
           </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Sign in with your super-admin credentials to manage all restaurants.
+          <p className="mt-2 text-sm" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
+            Platform administration portal
           </p>
         </div>
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4 rounded-2xl border border-slate-200 bg-white px-4 py-5 shadow-sm"
+
+        {/* Form card */}
+        <div
+          className="relative rounded-[4px] p-8 flourish-lg"
+          style={{
+            backgroundColor: '#251E19',
+            border: '1px solid #4A3F35',
+            boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
+          }}
         >
-          {error && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-              {error}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div
+                className="rounded-[4px] px-4 py-3 text-sm"
+                style={{
+                  backgroundColor: 'rgba(139,38,53,0.12)',
+                  border: '1px solid rgba(139,38,53,0.35)',
+                  color: '#C96070',
+                  fontFamily: 'var(--font-body)',
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <label htmlFor="sa-email" className="label-academia">
+                Admin Email
+              </label>
+              <input
+                id="sa-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="input-academia"
+                placeholder="admin@example.com"
+              />
             </div>
-          )}
-          <div className="space-y-1">
-            <label htmlFor="sa-email" className="text-xs font-medium text-slate-700">
-              Email
-            </label>
-            <input
-              id="sa-email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-              placeholder="admin@example.com"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="sa-password" className="text-xs font-medium text-slate-700">
-              Password
-            </label>
-            <input
-              id="sa-password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              className="w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400"
-              placeholder="••••••••"
-            />
-          </div>
-          <button
-            type="submit"
-            className="flex w-full items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
-            disabled={submitting}
-          >
-            {submitting ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+
+            <div className="space-y-1.5">
+              <label htmlFor="sa-password" className="label-academia">
+                Passphrase
+              </label>
+              <input
+                id="sa-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="input-academia"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                className="btn-brass w-full"
+                disabled={submitting}
+              >
+                {submitting ? 'Verifying…' : 'Enter'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )

@@ -7,10 +7,8 @@ export default function OwnerRoute() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900">
-        <div className="mx-auto max-w-md px-4 py-6">
-          <p className="text-sm text-slate-600">Loading your restaurant…</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1C1714' }}>
+        <p className="text-sm italic" style={{ fontFamily: 'var(--font-body)', color: '#4A3F35' }}>Loading your restaurant…</p>
       </div>
     )
   }

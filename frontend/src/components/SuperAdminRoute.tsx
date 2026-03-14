@@ -7,8 +7,8 @@ export default function SuperAdminRoute() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center">
-        <p className="text-sm text-slate-600">Loading…</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1C1714' }}>
+        <p className="text-sm italic" style={{ fontFamily: 'var(--font-body)', color: '#4A3F35' }}>Loading…</p>
       </div>
     )
   }

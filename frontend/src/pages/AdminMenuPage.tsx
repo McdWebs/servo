@@ -545,23 +545,22 @@ export default function AdminMenuPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900">
-        <div className="mx-auto max-w-3xl px-3 py-6 sm:px-4">
-          <p className="text-sm text-slate-600">Loading menu…</p>
-        </div>
+      <div className="space-y-4 animate-pulse">
+        <div className="h-4 w-48 rounded-[4px]" style={{ backgroundColor: '#3D332B' }} />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-[4px] p-5" style={{ backgroundColor: '#251E19', border: '1px solid #4A3F35' }}>
+            <div className="h-4 w-32 rounded-[4px] mb-3" style={{ backgroundColor: '#3D332B' }} />
+            <div className="h-[72px] rounded-[4px]" style={{ backgroundColor: '#3D332B' }} />
+          </div>
+        ))}
       </div>
     )
   }
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900">
-        <div className="mx-auto max-w-3xl px-3 py-6 sm:px-4">
-          <h1 className="text-lg font-semibold">Admin</h1>
-          <p className="mt-2 text-sm text-rose-600">
-            {error ?? 'Failed to load restaurant menu.'}
-          </p>
-        </div>
+      <div className="rounded-[4px] px-5 py-4 text-sm" style={{ backgroundColor: 'rgba(139,38,53,0.1)', border: '1px solid rgba(139,38,53,0.3)', color: '#C96070', fontFamily: 'var(--font-body)' }}>
+        {error ?? 'Failed to load restaurant menu.'}
       </div>
     )
   }
@@ -570,122 +569,59 @@ export default function AdminMenuPage() {
 
   return (
     <div
-      className="min-h-screen bg-slate-50 text-slate-900 pb-8"
+      className="pb-8"
+      style={{ color: '#E8DFD4' }}
       onClick={() => setOpenActionsItemId(null)}
     >
-      <div className="mx-auto max-w-3xl px-3 py-4 space-y-6 sm:px-4 sm:py-6">
-        <section className="rounded-2xl border border-slate-200 bg-white px-3 py-3 sm:px-4">
-          {/* Mobile: single button that expands to show form */}
+      <div className="space-y-6">
+        {/* Add category toolbar */}
+        <section className="rounded-[4px] px-4 py-4" style={{ backgroundColor: '#251E19', border: '1px solid #4A3F35' }}>
           <div className="sm:hidden">
             {!addCategoryOpen ? (
               <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                  disabled={saving}
-                  onClick={() => setAddCategoryOpen(true)}
-                >
-                  + Add category
+                <button type="button" className="btn-brass w-full" disabled={saving} onClick={() => setAddCategoryOpen(true)}>
+                  + Add Category
                 </button>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-60"
-                  disabled={saving}
-                  onClick={() => setBulkImportOpen(true)}
-                >
-                  ⬆ Bulk import from text
+                <button type="button" className="btn-outline w-full" disabled={saving} onClick={() => setBulkImportOpen(true)}>
+                  ⬆ Bulk Import
                 </button>
               </div>
             ) : (
-              <form
-                className="flex flex-col gap-2 text-xs"
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  const form = e.currentTarget
-                  const formData = new FormData(form)
-                  const name = (formData.get('name') as string) ?? ''
-                  void addCategory(name)
-                  form.reset()
-                  setAddCategoryOpen(false)
-                }}
-              >
-                <input
-                  name="name"
-                  autoFocus
-                  className="min-h-[44px] w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none placeholder:text-slate-400"
-                  placeholder="New category name"
-                />
+              <form className="flex flex-col gap-2" onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); void addCategory((fd.get('name') as string) ?? ''); e.currentTarget.reset(); setAddCategoryOpen(false) }}>
+                <input name="name" autoFocus className="input-academia" style={{ height: '2.75rem', fontSize: '14px' }} placeholder="New category name" />
                 <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className="min-h-[44px] flex-1 touch-manipulation rounded-full border border-slate-200 bg-white px-3 py-2 text-slate-700 hover:bg-slate-50"
-                    onClick={() => setAddCategoryOpen(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="min-h-[44px] flex-1 touch-manipulation rounded-full bg-emerald-600 px-3 py-2 font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                    disabled={saving}
-                  >
-                    Add
-                  </button>
+                  <button type="button" className="btn-outline flex-1 btn-brass-sm" onClick={() => setAddCategoryOpen(false)}>Cancel</button>
+                  <button type="submit" className="btn-brass flex-1 btn-brass-sm" disabled={saving}>Add</button>
                 </div>
               </form>
             )}
           </div>
-          {/* Desktop: always-visible form */}
           <div className="hidden sm:block">
-            <h2 className="mb-2 text-sm font-semibold text-slate-900">Add category</h2>
-            <form
-              className="flex flex-col gap-2 text-xs sm:flex-row"
-              onSubmit={(e) => {
-                e.preventDefault()
-                const form = e.currentTarget
-                const formData = new FormData(form)
-                const name = (formData.get('name') as string) ?? ''
-                void addCategory(name)
-                form.reset()
-              }}
-            >
-              <input
-                name="name"
-                className="min-h-[44px] flex-1 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                placeholder="New category name"
-              />
-              <button
-                type="submit"
-                className="min-h-[44px] touch-manipulation rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                disabled={saving}
-              >
-                Add category
-              </button>
-              <button
-                type="button"
-                className="min-h-[44px] touch-manipulation rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-60"
-                disabled={saving}
-                onClick={() => setBulkImportOpen(true)}
-              >
-                ⬆ Bulk import
-              </button>
+            <span className="overline-volume">Add Section</span>
+            <form className="flex flex-col gap-2 sm:flex-row mt-2" onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); void addCategory((fd.get('name') as string) ?? ''); e.currentTarget.reset() }}>
+              <input name="name" className="input-academia flex-1" style={{ height: '2.75rem', fontSize: '14px' }} placeholder="New category name" />
+              <button type="submit" className="btn-brass" disabled={saving}>Add Category</button>
+              <button type="button" className="btn-outline" disabled={saving} onClick={() => setBulkImportOpen(true)}>⬆ Bulk Import</button>
             </form>
           </div>
         </section>
 
-        <section className="space-y-6">
+        <section className="space-y-5">
           {data.categories.length === 0 && (
-            <p className="text-xs text-slate-500">No categories yet. Add one above.</p>
+            <p className="text-sm italic" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
+              No categories yet. Add one above.
+            </p>
           )}
           {data.categories.map((category, catIndex) => {
             const isCollapsed = collapsedCategoryIds.includes(category._id)
             return (
               <div
                 key={category._id}
-                className={`group rounded-3xl border bg-white/95 p-4 shadow-sm ring-1 ring-transparent transition hover:border-emerald-200 hover:shadow-md hover:ring-emerald-50 sm:p-5 ${
-                  dragCategoryIndex === catIndex
-                    ? 'border-emerald-400 ring-1 ring-emerald-300'
-                    : 'border-slate-200'
-                }`}
+                className="rounded-[4px] p-4 transition-all duration-300 sm:p-5"
+                style={{
+                  backgroundColor: '#251E19',
+                  border: `1px solid ${dragCategoryIndex === catIndex ? 'rgba(201,169,98,0.5)' : '#4A3F35'}`,
+                }}
                 draggable={editingCategoryId === category._id ? false : true}
                 onDragStart={(e) => {
                   if (saving) return
@@ -717,9 +653,9 @@ export default function AdminMenuPage() {
                 onDragEnd={() => setDragCategoryIndex(null)}
               >
                 {/* Category header */}
-                <div className="mb-4 flex items-start gap-3 border-b border-slate-100 pb-3">
+                <div className="mb-4 flex items-start gap-3 pb-3" style={{ borderBottom: '1px solid #4A3F35' }}>
                   {/* Drag handle */}
-                  <div className="flex-shrink-0 cursor-grab text-slate-300 active:cursor-grabbing select-none text-base leading-none">
+                  <div className="flex-shrink-0 cursor-grab active:cursor-grabbing select-none text-base leading-none mt-0.5" style={{ color: '#4A3F35' }}>
                     ⠿
                   </div>
 
@@ -729,154 +665,93 @@ export default function AdminMenuPage() {
                       <div className="flex items-center gap-2">
                         <input
                           type="text"
-                          className="min-h-[36px] w-full max-w-xs rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 placeholder:text-slate-400"
+                          className="input-academia max-w-xs"
+                          style={{ height: '2.5rem', fontSize: '13px' }}
                           value={editingCategoryName}
                           onChange={(e) => setEditingCategoryName(e.target.value)}
                           autoFocus
                           placeholder="Category name"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') void updateCategoryName(category._id, editingCategoryName)
-                            if (e.key === 'Escape') {
-                              setEditingCategoryId(null)
-                              setEditingCategoryName('')
-                            }
+                            if (e.key === 'Escape') { setEditingCategoryId(null); setEditingCategoryName('') }
                           }}
                         />
-                        <button
-                          type="button"
-                          className="flex-shrink-0 rounded-full bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                          disabled={saving}
-                          onClick={() => void updateCategoryName(category._id, editingCategoryName)}
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          className="flex-shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-slate-600 hover:bg-slate-50"
-                          onClick={() => {
-                            setEditingCategoryId(null)
-                            setEditingCategoryName('')
-                          }}
-                        >
-                          Cancel
-                        </button>
+                        <button type="button" className="btn-brass btn-brass-sm shrink-0" style={{ height: '2.5rem', fontSize: '0.55rem' }} disabled={saving} onClick={() => void updateCategoryName(category._id, editingCategoryName)}>Save</button>
+                        <button type="button" className="btn-ghost shrink-0" style={{ height: '2.5rem', fontSize: '0.55rem' }} onClick={() => { setEditingCategoryId(null); setEditingCategoryName('') }}>Cancel</button>
                       </div>
                     ) : (
-                      <h2 className="break-words text-sm font-semibold tracking-tight text-slate-900">
+                      <h2 className="break-words text-lg" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}>
                         {category.name}
                       </h2>
                     )}
                   </div>
 
-                  {/* Action toolbar — only shown when not renaming */}
+                  {/* Action toolbar */}
                   {editingCategoryId !== category._id && (
                     <div className="flex flex-shrink-0 items-center gap-1">
                       {/* Collapse toggle */}
-                      <button
-                        type="button"
-                        title={isCollapsed ? 'Expand' : 'Collapse'}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                        onClick={() => toggleCategoryCollapsed(category._id)}
-                      >
-                        <svg
-                          className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
-                          fill="none"
-                          viewBox="0 0 16 16"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
+                      <button type="button" title={isCollapsed ? 'Expand' : 'Collapse'}
+                        className="flex h-8 w-8 items-center justify-center rounded-[4px] transition-colors duration-150"
+                        style={{ color: '#4A3F35' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A962' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = '#4A3F35' }}
+                        onClick={() => toggleCategoryCollapsed(category._id)}>
+                        <svg className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 6l4 4 4-4" />
                         </svg>
                       </button>
 
                       {/* Rename */}
-                      <button
-                        type="button"
-                        title="Rename category"
-                        disabled={saving}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40"
-                        onClick={() => {
-                          setEditingCategoryId(category._id)
-                          setEditingCategoryName(category.name)
-                        }}
-                      >
+                      <button type="button" title="Rename" disabled={saving}
+                        className="flex h-8 w-8 items-center justify-center rounded-[4px] transition-colors duration-150 disabled:opacity-40"
+                        style={{ color: '#9C8B7A' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A962' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = '#9C8B7A' }}
+                        onClick={() => { setEditingCategoryId(category._id); setEditingCategoryName(category.name) }}>
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M11.5 2.5a1.414 1.414 0 012 2L5 13H3v-2L11.5 2.5z" />
                         </svg>
                       </button>
 
                       {/* Move up */}
-                      <button
-                        type="button"
-                        title="Move up"
-                        disabled={catIndex === 0 || saving}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30"
-                        onClick={() => {
-                          if (saving || !data || catIndex === 0) return
-                          const categories = [...data.categories]
-                          const moved = categories.splice(catIndex, 1)[0]
-                          categories.splice(catIndex - 1, 0, moved)
-                          setData((prev) => (prev ? { ...prev, categories } : prev))
-                          void reorderCategories(categories)
-                        }}
-                      >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12V4M4 8l4-4 4 4" />
-                        </svg>
+                      <button type="button" title="Move up" disabled={catIndex === 0 || saving}
+                        className="flex h-8 w-8 items-center justify-center rounded-[4px] transition-colors duration-150 disabled:opacity-30"
+                        style={{ color: '#9C8B7A' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A962' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = '#9C8B7A' }}
+                        onClick={() => { if (saving || !data || catIndex === 0) return; const cats = [...data.categories]; const m = cats.splice(catIndex, 1)[0]; cats.splice(catIndex - 1, 0, m); setData((prev) => (prev ? { ...prev, categories: cats } : prev)); void reorderCategories(cats) }}>
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12V4M4 8l4-4 4 4" /></svg>
                       </button>
 
                       {/* Move down */}
-                      <button
-                        type="button"
-                        title="Move down"
-                        disabled={catIndex === data.categories.length - 1 || saving}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30"
-                        onClick={() => {
-                          if (saving || !data || catIndex === data.categories.length - 1) return
-                          const categories = [...data.categories]
-                          const moved = categories.splice(catIndex, 1)[0]
-                          categories.splice(catIndex + 1, 0, moved)
-                          setData((prev) => (prev ? { ...prev, categories } : prev))
-                          void reorderCategories(categories)
-                        }}
-                      >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 4v8m4-4l-4 4-4-4" />
-                        </svg>
+                      <button type="button" title="Move down" disabled={catIndex === data.categories.length - 1 || saving}
+                        className="flex h-8 w-8 items-center justify-center rounded-[4px] transition-colors duration-150 disabled:opacity-30"
+                        style={{ color: '#9C8B7A' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A962' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = '#9C8B7A' }}
+                        onClick={() => { if (saving || !data || catIndex === data.categories.length - 1) return; const cats = [...data.categories]; const m = cats.splice(catIndex, 1)[0]; cats.splice(catIndex + 1, 0, m); setData((prev) => (prev ? { ...prev, categories: cats } : prev)); void reorderCategories(cats) }}>
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8 4v8m4-4l-4 4-4-4" /></svg>
                       </button>
 
-                      {/* Divider */}
-                      <div className="mx-1 h-5 w-px bg-slate-200" />
+                      <span className="mx-1 h-5 w-px" style={{ backgroundColor: '#4A3F35' }} aria-hidden="true" />
 
                       {/* Add item */}
-                      <button
-                        type="button"
-                        title="Add item"
-                        disabled={saving}
-                        className="flex h-8 items-center gap-1.5 rounded-full bg-emerald-600 px-3 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
-                        onClick={() =>
-                          setAddingItemForCategory({ _id: category._id, name: category.name })
-                        }
-                      >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 3v10M3 8h10" />
-                        </svg>
-                        <span className="hidden sm:inline">Add item</span>
+                      <button type="button" title="Add item" disabled={saving}
+                        className="flex h-8 items-center gap-1.5 rounded-[4px] px-3 text-[11px] tracking-[0.1em] uppercase transition-all duration-150 disabled:opacity-60"
+                        style={{ fontFamily: 'var(--font-display)', background: 'linear-gradient(180deg, #D4B872 0%, #C9A962 50%, #B8953F 100%)', color: '#1C1714' }}
+                        onClick={() => setAddingItemForCategory({ _id: category._id, name: category.name })}>
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8 3v10M3 8h10" /></svg>
+                        <span className="hidden sm:inline">Add Item</span>
                       </button>
 
                       {/* Delete category */}
-                      <button
-                        type="button"
-                        title="Delete category"
-                        disabled={saving}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
-                        onClick={() =>
-                          setPendingDelete({ type: 'category', id: category._id, name: category.name })
-                        }
-                      >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h10M6 4V2h4v2M5 4v9a1 1 0 001 1h4a1 1 0 001-1V4" />
-                        </svg>
+                      <button type="button" title="Delete category" disabled={saving}
+                        className="flex h-8 w-8 items-center justify-center rounded-[4px] transition-colors duration-150 disabled:opacity-40"
+                        style={{ color: '#4A3F35' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#8B2635' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = '#4A3F35' }}
+                        onClick={() => setPendingDelete({ type: 'category', id: category._id, name: category.name })}>
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4h10M6 4V2h4v2M5 4v9a1 1 0 001 1h4a1 1 0 001-1V4" /></svg>
                       </button>
                     </div>
                   )}
@@ -892,20 +767,17 @@ export default function AdminMenuPage() {
                     }`}
                   >
                     {category.items && category.items.length > 0 ? (
-                      <div className="rounded-2xl border border-slate-100 bg-slate-50/60">
-                        <div className="divide-y divide-slate-100">
+                      <div className="rounded-[4px]" style={{ border: '1px solid #4A3F35' }}>
+                        <div style={{ borderTop: '0' }}>
                           {category.items.map((item, itemIndex) => (
                         <div
                           key={item._id}
-                          className={`relative flex flex-col gap-2 bg-white/95 px-3 py-2.5 transition hover:bg-emerald-50/40 sm:flex-row sm:items-center sm:justify-between touch-manipulation ${
-                            dragItemState &&
-                            dragItemState.categoryId === category._id &&
-                            dragItemState.index === itemIndex
-                              ? 'ring-1 ring-emerald-300'
-                              : ''
-                          } ${item.available === false ? 'opacity-75' : ''} ${
-                            openActionsItemId === item._id ? 'z-20' : ''
-                          }`}
+                          className={`relative flex flex-col gap-2 px-3 py-2.5 transition-colors duration-150 sm:flex-row sm:items-center sm:justify-between touch-manipulation ${openActionsItemId === item._id ? 'z-20' : ''}`}
+                          style={{
+                            backgroundColor: dragItemState?.categoryId === category._id && dragItemState?.index === itemIndex ? 'rgba(201,169,98,0.08)' : item.available === false ? 'rgba(139,38,53,0.06)' : 'transparent',
+                            borderBottom: itemIndex < category.items.length - 1 ? '1px solid #3D332B' : 'none',
+                            borderLeft: item.available === false ? '3px solid rgba(139,38,53,0.5)' : '3px solid transparent',
+                          }}
                           draggable
                           onDragStart={(e) => {
                             if (saving) return
@@ -956,23 +828,26 @@ export default function AdminMenuPage() {
                           {/* Left: image, title/description, tags */}
                           <div className="flex flex-1 flex-col gap-2">
                             <div className="flex items-start gap-3">
-                              <div className="mt-1 hidden h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-[9px] text-slate-400 sm:flex">
+                              <div className="mt-1 hidden h-5 w-5 flex-shrink-0 items-center justify-center text-[9px] sm:flex" style={{ color: '#4A3F35' }}>
                                 ⋮⋮
                               </div>
                               {item.imageUrl && (
-                                <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                                  <img
-                                    src={item.imageUrl}
-                                    alt={item.name}
-                                    className="h-full w-full object-cover"
-                                  />
+                                <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-[4px]" style={{ border: '1px solid #4A3F35' }}>
+                                  <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover img-sepia" />
                                 </div>
                               )}
-                              <div className="min-w-0 space-y-1">
-                                <div className="truncate text-xs font-semibold text-slate-900">
-                                  {item.name}
+                              <div className="min-w-0 space-y-0.5">
+                                <div className="flex items-center gap-2">
+                                  <div className="truncate text-sm" style={{ fontFamily: 'var(--font-heading)', color: item.available === false ? '#4A3F35' : '#E8DFD4', fontWeight: 400, textDecoration: item.available === false ? 'line-through' : 'none' }}>
+                                    {item.name}
+                                  </div>
+                                  {item.available === false && (
+                                    <span className="shrink-0 rounded-[2px] px-1.5 py-0.5 text-[9px] tracking-[0.1em] uppercase" style={{ fontFamily: 'var(--font-display)', backgroundColor: 'rgba(139,38,53,0.2)', color: '#C07080', border: '1px solid rgba(139,38,53,0.3)' }}>
+                                      Unavailable
+                                    </span>
+                                  )}
                                 </div>
-                                <div className="mt-0.5 text-[11px] text-slate-500">
+                                <div className="text-[11px] leading-snug" style={{ fontFamily: 'var(--font-body)', color: item.available === false ? '#3D332B' : '#9C8B7A' }}>
                                   {item.description}
                                 </div>
                               </div>
@@ -981,24 +856,18 @@ export default function AdminMenuPage() {
                               {(item.tags?.length ?? 0) > 0 || (item.allergens?.length ?? 0) > 0 ? (
                                 <>
                                   {item.tags?.map((tag) => (
-                                    <span
-                                      key={tag}
-                                      className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700"
-                                    >
+                                    <span key={tag} className="rounded-[4px] px-2 py-0.5 text-[10px]" style={{ backgroundColor: 'rgba(201,169,98,0.12)', color: '#C9A962', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
                                       {tag}
                                     </span>
                                   ))}
                                   {item.allergens?.map((allergen) => (
-                                    <span
-                                      key={allergen}
-                                      className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700"
-                                    >
+                                    <span key={allergen} className="rounded-[4px] px-2 py-0.5 text-[10px]" style={{ backgroundColor: 'rgba(139,38,53,0.12)', color: '#C07080', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
                                       {allergen}
                                     </span>
                                   ))}
                                 </>
                               ) : (
-                                <span className="text-[10px] text-slate-400">
+                                <span className="text-[10px] italic" style={{ fontFamily: 'var(--font-body)', color: '#4A3F35' }}>
                                   No tags or allergens set
                                 </span>
                               )}
@@ -1007,32 +876,29 @@ export default function AdminMenuPage() {
 
                           {/* Right: price and actions dropdown */}
                           <div className="mt-2 flex items-center justify-between gap-2 sm:mt-0 sm:w-auto sm:flex-col sm:items-end">
-                            <div className="flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-white sm:self-end">
+                            <div className="flex items-center gap-1 rounded-[4px] px-2.5 py-1 text-[11px]" style={{ fontFamily: 'var(--font-display)', background: item.available === false ? 'none' : 'linear-gradient(180deg, #D4B872 0%, #B8953F 100%)', backgroundColor: item.available === false ? '#3D332B' : undefined, color: item.available === false ? '#4A3F35' : '#1C1714', letterSpacing: '0.05em', textDecoration: item.available === false ? 'line-through' : 'none' }}>
                               <span>{currencySymbol}</span>
                               <span>{item.price.toFixed(2)}</span>
                             </div>
-                            <div
-                              className="relative"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                              }}
-                            >
+                            <div className="relative" onClick={(e) => e.stopPropagation()}>
                               <button
                                 type="button"
-                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-medium text-slate-700 hover:bg-slate-50"
-                                onClick={() =>
-                                  setOpenActionsItemId((prev) =>
-                                    prev === item._id ? null : item._id
-                                  )
-                                }
+                                className="rounded-[4px] px-3 py-1.5 text-[10px] tracking-widest uppercase transition-colors duration-150"
+                                style={{ fontFamily: 'var(--font-display)', border: '1px solid #4A3F35', color: '#9C8B7A', backgroundColor: 'transparent' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A962'; e.currentTarget.style.borderColor = 'rgba(201,169,98,0.5)' }}
+                                onMouseLeave={(e) => { e.currentTarget.style.color = '#9C8B7A'; e.currentTarget.style.borderColor = '#4A3F35' }}
+                                onClick={() => setOpenActionsItemId((prev) => prev === item._id ? null : item._id)}
                               >
                                 Actions
                               </button>
                               {openActionsItemId === item._id && (
-                                <div className="absolute right-0 z-30 mt-1 w-40 rounded-lg border border-slate-200 bg-white py-1 text-[11px] shadow-lg">
+                                <div className="absolute right-0 z-30 mt-1 w-40 rounded-[4px] py-1 text-[11px]" style={{ backgroundColor: '#251E19', border: '1px solid #4A3F35', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}>
                                   <button
                                     type="button"
-                                    className="block w-full px-3 py-1.5 text-left text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                                    className="block w-full px-3 py-2 text-left transition-colors duration-100 disabled:opacity-60"
+                                    style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A962'; e.currentTarget.style.backgroundColor = 'rgba(201,169,98,0.07)' }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.color = '#9C8B7A'; e.currentTarget.style.backgroundColor = 'transparent' }}
                                     disabled={saving}
                                     onClick={() => {
                                       if (saving) return
@@ -1092,30 +958,23 @@ export default function AdminMenuPage() {
                                   </button>
                                   <button
                                     type="button"
-                                    className="block w-full px-3 py-1.5 text-left text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                                    className="block w-full px-3 py-2 text-left transition-colors duration-100 disabled:opacity-60"
+                                    style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.color = '#C9A962'; e.currentTarget.style.backgroundColor = 'rgba(201,169,98,0.07)' }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.color = '#9C8B7A'; e.currentTarget.style.backgroundColor = 'transparent' }}
                                     disabled={saving}
-                                    onClick={() => {
-                                      setEditingItem({
-                                        item,
-                                        categoryId: category._id,
-                                      })
-                                      setOpenActionsItemId(null)
-                                    }}
+                                    onClick={() => { setEditingItem({ item, categoryId: category._id }); setOpenActionsItemId(null) }}
                                   >
                                     Edit
                                   </button>
                                   <button
                                     type="button"
-                                    className="block w-full px-3 py-1.5 text-left text-rose-700 hover:bg-rose-50 disabled:opacity-60"
+                                    className="block w-full px-3 py-2 text-left transition-colors duration-100 disabled:opacity-60"
+                                    style={{ fontFamily: 'var(--font-body)', color: '#C07080' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.color = '#E88090'; e.currentTarget.style.backgroundColor = 'rgba(139,38,53,0.1)' }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.color = '#C07080'; e.currentTarget.style.backgroundColor = 'transparent' }}
                                     disabled={saving}
-                                    onClick={() => {
-                                      setPendingDelete({
-                                        type: 'item',
-                                        id: item._id,
-                                        name: item.name,
-                                      })
-                                      setOpenActionsItemId(null)
-                                    }}
+                                    onClick={() => { setPendingDelete({ type: 'item', id: item._id, name: item.name }); setOpenActionsItemId(null) }}
                                   >
                                     Delete
                                   </button>
@@ -1128,7 +987,7 @@ export default function AdminMenuPage() {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-[11px] text-slate-500 px-1 py-2">
+                      <p className="text-[11px] italic px-1 py-2" style={{ fontFamily: 'var(--font-body)', color: '#4A3F35' }}>
                         No items in this category yet.
                       </p>
                     )}
@@ -1140,16 +999,17 @@ export default function AdminMenuPage() {
         </section>
 
         {bulkImportOpen && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-y-auto overscroll-contain sm:items-center">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-4 shadow-xl my-4 sm:my-0">
-              <h2 className="text-sm font-semibold text-slate-900">Bulk import from text</h2>
-              <p className="mt-1 text-[11px] text-slate-500">
-                Paste your menu text below. A line without a dash is treated as a category name.
-                A line like <span className="font-mono font-medium text-slate-700">Pinko — ₪53</span> is treated as an item.
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto overscroll-contain sm:items-center" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+            <div className="w-full max-w-lg rounded-[4px] p-5 my-4 sm:my-0" style={{ backgroundColor: '#1C1714', border: '1px solid #4A3F35', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+              <span className="overline-volume">Bulk Import</span>
+              <h2 className="mt-1 text-xl" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}>Import from Text</h2>
+              <p className="mt-2 text-xs leading-relaxed" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
+                Paste your menu text below. A line without a dash is a category name.
+                A line like <span className="font-mono" style={{ color: '#C9A962' }}>Pinko — ₪53</span> is treated as an item.
               </p>
               <textarea
-                className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400 font-mono leading-relaxed"
-                rows={10}
+                className="input-academia mt-3 w-full font-mono leading-relaxed"
+                style={{ minHeight: '180px', fontSize: '12px' }}
                 placeholder={`Cocktails\nPinko — ₪53\nNigori Mule — ₪58\n\nDesserts\nChocolate Fondant — ₪42`}
                 value={bulkImportText}
                 onChange={(e) => setBulkImportText(e.target.value)}
@@ -1162,28 +1022,25 @@ export default function AdminMenuPage() {
                 const parsed = parseBulkMenuText(bulkImportText)
                 if (parsed.length === 0) {
                   return (
-                    <p className="mt-2 text-[11px] text-amber-600">
-                      No valid categories or items detected yet. Make sure items use a dash (—) separator.
+                    <p className="mt-2 text-[11px] italic" style={{ fontFamily: 'var(--font-body)', color: '#B8953F' }}>
+                      No valid entries detected yet. Ensure items use a dash (—) separator.
                     </p>
                   )
                 }
                 const totalItems = parsed.reduce((s, c) => s + c.items.length, 0)
                 return (
-                  <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2 space-y-2 max-h-52 overflow-y-auto">
-                    <p className="text-[11px] font-semibold text-emerald-800">
-                      Preview — {parsed.length} {parsed.length === 1 ? 'category' : 'categories'},{' '}
-                      {totalItems} {totalItems === 1 ? 'item' : 'items'}
+                  <div className="mt-3 rounded-[4px] px-3 py-2 space-y-2 max-h-52 overflow-y-auto" style={{ border: '1px solid rgba(201,169,98,0.25)', backgroundColor: 'rgba(201,169,98,0.06)' }}>
+                    <p className="text-[11px]" style={{ fontFamily: 'var(--font-display)', color: '#C9A962', letterSpacing: '0.08em' }}>
+                      PREVIEW — {parsed.length} {parsed.length === 1 ? 'CATEGORY' : 'CATEGORIES'}, {totalItems} {totalItems === 1 ? 'ITEM' : 'ITEMS'}
                     </p>
                     {parsed.map((cat, i) => (
                       <div key={i}>
-                        <p className="text-[11px] font-semibold text-slate-800">{cat.categoryName}</p>
+                        <p className="text-[11px]" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4' }}>{cat.categoryName}</p>
                         <ul className="mt-0.5 space-y-0.5 pl-3">
                           {cat.items.map((item, j) => (
-                            <li key={j} className="text-[10px] text-slate-600 flex justify-between">
+                            <li key={j} className="text-[10px] flex justify-between" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
                               <span>{item.name}</span>
-                              <span className="font-medium text-slate-800">
-                                {currencySymbol}{item.price.toFixed(2)}
-                              </span>
+                              <span style={{ color: '#C9A962' }}>{currencySymbol}{item.price.toFixed(2)}</span>
                             </li>
                           ))}
                         </ul>
@@ -1195,14 +1052,15 @@ export default function AdminMenuPage() {
 
               {/* Progress */}
               {bulkImportProgress !== null && (
-                <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <p className="text-[11px] font-medium text-slate-700">
+                <div className="mt-3 rounded-[4px] px-3 py-2" style={{ border: '1px solid #4A3F35', backgroundColor: 'rgba(201,169,98,0.05)' }}>
+                  <p className="text-[11px]" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
                     Importing… {bulkImportProgress.done} / {bulkImportProgress.total} items
                   </p>
-                  <div className="mt-1.5 h-1.5 w-full rounded-full bg-slate-200">
+                  <div className="mt-1.5 h-1 w-full rounded-full" style={{ backgroundColor: '#3D332B' }}>
                     <div
-                      className="h-1.5 rounded-full bg-emerald-500 transition-all"
+                      className="h-1 rounded-full transition-all"
                       style={{
+                        background: 'linear-gradient(90deg, #B8953F, #C9A962)',
                         width: `${bulkImportProgress.total > 0 ? (bulkImportProgress.done / bulkImportProgress.total) * 100 : 0}%`,
                       }}
                     />
@@ -1210,36 +1068,21 @@ export default function AdminMenuPage() {
                 </div>
               )}
 
-              <div className="mt-4 flex justify-end gap-2 text-xs">
-                <button
-                  type="button"
-                  className="min-h-[44px] touch-manipulation rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                  disabled={bulkImportProgress !== null}
-                  onClick={() => {
-                    setBulkImportOpen(false)
-                    setBulkImportText('')
-                    setBulkImportProgress(null)
-                  }}
-                >
+              <div className="mt-5 flex justify-end gap-2">
+                <button type="button" className="btn-outline" disabled={bulkImportProgress !== null}
+                  onClick={() => { setBulkImportOpen(false); setBulkImportText(''); setBulkImportProgress(null) }}>
                   Cancel
                 </button>
-                <button
-                  type="button"
-                  className="min-h-[44px] touch-manipulation rounded-full bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                <button type="button" className="btn-brass"
                   disabled={saving || bulkImportProgress !== null || !bulkImportText.trim() || parseBulkMenuText(bulkImportText).length === 0}
-                  onClick={() => {
-                    const parsed = parseBulkMenuText(bulkImportText)
-                    if (parsed.length === 0) return
-                    void bulkImport(parsed)
-                  }}
-                >
+                  onClick={() => { const parsed = parseBulkMenuText(bulkImportText); if (parsed.length === 0) return; void bulkImport(parsed) }}>
                   {bulkImportProgress !== null
                     ? `Importing… (${bulkImportProgress.done}/${bulkImportProgress.total})`
                     : (() => {
                         const parsed = parseBulkMenuText(bulkImportText)
                         if (!bulkImportText.trim() || parsed.length === 0) return 'Import'
                         const totalItems = parsed.reduce((s, c) => s + c.items.length, 0)
-                        return `Import ${totalItems} item${totalItems === 1 ? '' : 's'} in ${parsed.length} categor${parsed.length === 1 ? 'y' : 'ies'}`
+                        return `Import ${totalItems} Item${totalItems === 1 ? '' : 's'}`
                       })()}
                 </button>
               </div>
@@ -1247,37 +1090,21 @@ export default function AdminMenuPage() {
           </div>
         )}
         {pendingDelete && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 overflow-y-auto">
-            <div className="w-full max-w-sm rounded-2xl bg-white p-4 shadow-xl my-auto">
-              <h2 className="text-sm font-semibold text-slate-900">Confirm delete</h2>
-              <p className="mt-2 text-xs text-slate-700">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+            <div className="w-full max-w-sm rounded-[4px] p-5 my-auto" style={{ backgroundColor: '#1C1714', border: '1px solid #4A3F35', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+              <span className="overline-volume">Confirm</span>
+              <h2 className="mt-1 text-xl" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}>Delete {pendingDelete.type === 'category' ? 'Section' : 'Item'}?</h2>
+              <p className="mt-3 text-sm leading-relaxed" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
                 {pendingDelete.type === 'category'
-                  ? `Delete category "${pendingDelete.name}" and all its items?`
-                  : `Delete item "${pendingDelete.name}"?`}
+                  ? `This will permanently remove the section "${pendingDelete.name}" and all its items. This action cannot be undone.`
+                  : `This will permanently remove "${pendingDelete.name}" from the menu.`}
               </p>
-              <div className="mt-4 flex justify-end gap-2 text-xs">
-                <button
-                  type="button"
-                  className="min-h-[44px] touch-manipulation rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50"
-                  disabled={saving}
-                  onClick={() => setPendingDelete(null)}
-                >
+              <div className="mt-5 flex justify-end gap-2">
+                <button type="button" className="btn-outline" disabled={saving} onClick={() => setPendingDelete(null)}>
                   Cancel
                 </button>
-                <button
-                  type="button"
-                  className="min-h-[44px] touch-manipulation rounded-full bg-rose-600 px-4 py-2 text-white hover:bg-rose-700 disabled:opacity-60"
-                  disabled={saving}
-                  onClick={() => {
-                    if (!pendingDelete) return
-                    if (pendingDelete.type === 'category') {
-                      void deleteCategory(pendingDelete.id)
-                    } else {
-                      void deleteItem(pendingDelete.id)
-                    }
-                    setPendingDelete(null)
-                  }}
-                >
+                <button type="button" className="btn-danger" disabled={saving}
+                  onClick={() => { if (!pendingDelete) return; if (pendingDelete.type === 'category') { void deleteCategory(pendingDelete.id) } else { void deleteItem(pendingDelete.id) }; setPendingDelete(null) }}>
                   Delete
                 </button>
               </div>
@@ -1285,396 +1112,168 @@ export default function AdminMenuPage() {
           </div>
         )}
         {addingItemForCategory && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-y-auto overscroll-contain sm:items-center">
-            <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl my-4 sm:my-0 max-h-[90vh] overflow-y-auto">
-              <h2 className="text-sm font-semibold text-slate-900">Add item</h2>
-              <p className="mt-1 text-[11px] text-slate-600">
-                Create a new menu item in{' '}
-                <span className="font-semibold">{addingItemForCategory.name}</span>.
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto overscroll-contain sm:items-center" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+            <div className="w-full max-w-md rounded-[4px] p-5 my-4 sm:my-0 max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#1C1714', border: '1px solid #4A3F35', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+              <span className="overline-volume">New Entry</span>
+              <h2 className="mt-1 text-xl" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}>Add Item</h2>
+              <p className="mt-1 text-xs italic" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
+                Adding to <span style={{ color: '#C9A962' }}>{addingItemForCategory.name}</span>
               </p>
-              <form
-                className="mt-3 space-y-2 text-xs"
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  if (!addingItemForCategory) return
-                  const form = e.currentTarget
-                  const formData = new FormData(form)
-                  if (!newItemImagePreview) {
-                    formData.delete('image')
-                  }
-                  void (async () => {
-                    const ok = await addItem(addingItemForCategory._id, formData)
-                    if (ok) {
-                      setNewItemImagePreview(null)
-                      setAddingItemForCategory(null)
-                    }
-                  })()
-                }}
-              >
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <input
-                    name="name"
-                    required
-                    className="min-h-[44px] flex-1 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                    placeholder="Item name"
-                  />
-                  <input
-                    name="price"
-                    type="number"
-                    min={0.01}
-                    step="0.01"
-                    className="min-h-[44px] w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-right text-xs text-slate-900 outline-none placeholder:text-slate-400 sm:w-24"
-                    placeholder="Price"
-                  />
+              <form className="mt-4 space-y-3" onSubmit={(e) => { e.preventDefault(); if (!addingItemForCategory) return; const form = e.currentTarget; const formData = new FormData(form); if (!newItemImagePreview) formData.delete('image'); void (async () => { const ok = await addItem(addingItemForCategory._id, formData); if (ok) { setNewItemImagePreview(null); setAddingItemForCategory(null) } })() }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input name="name" required className="input-academia" style={{ height: '2.75rem', fontSize: '13px', flex: '1 1 0', minWidth: 0 }} placeholder="Item name" />
+                  <input name="price" type="number" min={0.01} step="0.01" className="input-academia" style={{ height: '2.75rem', fontSize: '13px', textAlign: 'right', width: '96px', flexShrink: 0 }} placeholder="Price" />
                 </div>
-                <textarea
-                  name="description"
-                  rows={2}
-                  required
-                  className="min-h-[80px] w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                  placeholder="Short description"
-                />
-                <div className="space-y-2">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-medium text-slate-700">
-                      Allergens (choose or add custom)
-                    </span>
+                <textarea name="description" rows={2} required className="input-academia w-full" style={{ minHeight: '72px', fontSize: '13px' }} placeholder="Short description" />
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="label-academia">Allergens</span>
                     <div className="flex flex-wrap gap-1">
                       {DEFAULT_ALLERGENS.map((allergen) => (
-                        <label
-                          key={allergen}
-                          className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-2 py-1 text-[10px] text-slate-700"
-                        >
-                          <input
-                            type="checkbox"
-                            name="allergenDefaults"
-                            value={allergen}
-                            className="h-3 w-3 rounded border-slate-300 text-emerald-600"
-                          />
+                        <label key={allergen} className="inline-flex items-center gap-1.5 rounded-[4px] px-2 py-1 text-[10px] cursor-pointer transition-colors duration-150" style={{ border: '1px solid #4A3F35', color: '#9C8B7A', fontFamily: 'var(--font-body)' }}>
+                          <input type="checkbox" name="allergenDefaults" value={allergen} className="h-3 w-3" style={{ accentColor: '#C9A962' }} />
                           <span>{allergen}</span>
                         </label>
                       ))}
                     </div>
-                    <input
-                      name="allergensCustom"
-                      className="mt-1 w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                      placeholder="Custom allergens (comma separated, optional)"
-                    />
+                    <input name="allergensCustom" className="input-academia" style={{ height: '2.5rem', fontSize: '12px' }} placeholder="Custom allergens (comma separated)" />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-medium text-slate-700">
-                      Tags (choose or add custom)
-                    </span>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="label-academia">Tags</span>
                     <div className="flex flex-wrap gap-1">
                       {DEFAULT_TAGS.map((tag) => (
-                        <label
-                          key={tag}
-                          className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-2 py-1 text-[10px] text-slate-700"
-                        >
-                          <input
-                            type="checkbox"
-                            name="tagDefaults"
-                            value={tag}
-                            className="h-3 w-3 rounded border-slate-300 text-emerald-600"
-                          />
+                        <label key={tag} className="inline-flex items-center gap-1.5 rounded-[4px] px-2 py-1 text-[10px] cursor-pointer transition-colors duration-150" style={{ border: '1px solid #4A3F35', color: '#9C8B7A', fontFamily: 'var(--font-body)' }}>
+                          <input type="checkbox" name="tagDefaults" value={tag} className="h-3 w-3" style={{ accentColor: '#C9A962' }} />
                           <span>{tag}</span>
                         </label>
                       ))}
                     </div>
-                    <input
-                      name="tagsCustom"
-                      className="mt-1 w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                      placeholder="Custom tags (comma separated, optional)"
-                    />
+                    <input name="tagsCustom" className="input-academia" style={{ height: '2.5rem', fontSize: '12px' }} placeholder="Custom tags (comma separated)" />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-medium text-slate-700">
-                      Item photo (optional)
-                    </span>
-                    <label className="group flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2 text-[11px] text-slate-600 hover:border-emerald-400 hover:bg-emerald-50/40">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-semibold text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-700">
-                        JPG/PNG
+                  <div className="flex flex-col gap-1.5">
+                    <span className="label-academia">Item Photo (optional)</span>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-[4px] px-3 py-2.5 transition-colors duration-150" style={{ border: '1px dashed #4A3F35', backgroundColor: 'rgba(201,169,98,0.03)' }}>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-[4px] text-[9px]" style={{ backgroundColor: '#3D332B', color: '#9C8B7A', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
+                        IMG
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-medium text-slate-800 group-hover:text-emerald-800">
-                          Upload item image
-                        </span>
-                        <span className="text-[10px] text-slate-500">
-                          Square image works best · max 5MB
-                        </span>
-                        {newItemImagePreview && (
-                          <span className="mt-1 text-[10px] text-emerald-700">
-                            Preview selected below
-                          </span>
-                        )}
+                        <span className="text-[11px]" style={{ fontFamily: 'var(--font-body)', color: '#E8DFD4' }}>Upload item image</span>
+                        <span className="text-[10px]" style={{ color: '#9C8B7A' }}>Square · max 5MB</span>
+                        {newItemImagePreview && <span className="mt-0.5 text-[10px]" style={{ color: '#C9A962' }}>Preview below</span>}
                       </div>
-                      <input
-                        type="file"
-                        name="image"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (file) {
-                            const url = URL.createObjectURL(file)
-                            setNewItemImagePreview(url)
-                          } else {
-                            setNewItemImagePreview(null)
-                          }
-                        }}
-                      />
+                      <input type="file" name="image" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; setNewItemImagePreview(f ? URL.createObjectURL(f) : null) }} />
                     </label>
                     {newItemImagePreview && (
-                      <div className="mt-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                        <div className="h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                          <img
-                            src={newItemImagePreview}
-                            alt="New item preview"
-                            className="h-full w-full object-cover"
-                          />
+                      <div className="flex items-center gap-3 rounded-[4px] px-3 py-2" style={{ border: '1px solid #4A3F35', backgroundColor: '#251E19' }}>
+                        <div className="h-12 w-12 overflow-hidden rounded-[4px]" style={{ border: '1px solid #4A3F35' }}>
+                          <img src={newItemImagePreview} alt="Preview" className="h-full w-full object-cover img-sepia" />
                         </div>
-                        <button
-                          type="button"
-                          className="text-[11px] font-medium text-rose-600 hover:text-rose-700"
-                          onClick={() => {
-                            setNewItemImagePreview(null)
-                          }}
-                        >
+                        <button type="button" className="text-[11px] transition-colors duration-150" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C07080' }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9C8B7A' }} onClick={() => setNewItemImagePreview(null)}>
                           Remove image
                         </button>
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="mt-3 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    className="min-h-[44px] touch-manipulation rounded-full border border-slate-200 bg-white px-4 py-2 text-xs text-slate-700 hover:bg-slate-50"
-                    disabled={saving}
-                    onClick={() => setAddingItemForCategory(null)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="min-h-[44px] touch-manipulation rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                    disabled={saving}
-                  >
-                    Add item
-                  </button>
+                <div className="flex justify-end gap-2 pt-1">
+                  <button type="button" className="btn-outline" disabled={saving} onClick={() => setAddingItemForCategory(null)}>Cancel</button>
+                  <button type="submit" className="btn-brass" disabled={saving}>Add Item</button>
                 </div>
               </form>
             </div>
           </div>
         )}
         {editingItem && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-y-auto overscroll-contain sm:items-center">
-            <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl my-4 sm:my-0 max-h-[90vh] overflow-y-auto">
-              <h2 className="text-sm font-semibold text-slate-900">Edit item</h2>
-              <p className="mt-1 text-[11px] text-slate-600">
-                Update the details for <span className="font-semibold">{editingItem.item.name}</span>.
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto overscroll-contain sm:items-center" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+            <div className="w-full max-w-md rounded-[4px] p-5 my-4 sm:my-0 max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#1C1714', border: '1px solid #4A3F35', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+              <span className="overline-volume">Edit Entry</span>
+              <h2 className="mt-1 text-xl" style={{ fontFamily: 'var(--font-heading)', color: '#E8DFD4', fontWeight: 400 }}>Edit Item</h2>
+              <p className="mt-1 text-xs italic" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
+                Editing <span style={{ color: '#C9A962' }}>{editingItem.item.name}</span>
               </p>
               <form
-                className="mt-3 space-y-2 text-xs"
+                className="mt-4 space-y-3"
                 onSubmit={(e) => {
                   e.preventDefault()
                   if (!editingItem) return
-                  const form = e.currentTarget
-                  const formData = new FormData(form)
-                  if (!editItemImagePreview) {
-                    formData.delete('image')
-                  }
-                  void (async () => {
-                    await updateItemDetails(editingItem.item._id, formData)
-                    setEditItemImagePreview(null)
-                    setEditingItem(null)
-                  })()
+                  const formData = new FormData(e.currentTarget)
+                  if (!editItemImagePreview) formData.delete('image')
+                  void (async () => { await updateItemDetails(editingItem.item._id, formData); setEditItemImagePreview(null); setEditingItem(null) })()
                 }}
               >
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <input
-                    name="name"
-                    required
-                    defaultValue={editingItem.item.name}
-                    className="min-h-[44px] flex-1 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                    placeholder="Item name"
-                  />
-                  <input
-                    name="price"
-                    type="number"
-                    min={0.01}
-                    step="0.01"
-                    defaultValue={editingItem.item.price.toFixed(2)}
-                    className="min-h-[44px] w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-right text-xs text-slate-900 outline-none placeholder:text-slate-400 sm:w-24"
-                    placeholder="Price"
-                  />
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input name="name" required defaultValue={editingItem.item.name} className="input-academia" style={{ height: '2.75rem', fontSize: '13px', flex: '1 1 0', minWidth: 0 }} placeholder="Item name" />
+                  <input name="price" type="number" min={0.01} step="0.01" defaultValue={editingItem.item.price.toFixed(2)} className="input-academia" style={{ height: '2.75rem', fontSize: '13px', textAlign: 'right', width: '96px', flexShrink: 0 }} placeholder="Price" />
                 </div>
-                <textarea
-                  name="description"
-                  rows={2}
-                  required
-                  defaultValue={editingItem.item.description}
-                  className="min-h-[80px] w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                  placeholder="Short description"
-                />
-                <div className="space-y-2">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-medium text-slate-700">
-                      Allergens (choose or add custom)
-                    </span>
+                <textarea name="description" rows={2} required defaultValue={editingItem.item.description} className="input-academia w-full" style={{ minHeight: '72px', fontSize: '13px' }} placeholder="Short description" />
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="label-academia">Allergens</span>
                     <div className="flex flex-wrap gap-1">
                       {DEFAULT_ALLERGENS.map((allergen) => (
-                        <label
-                          key={allergen}
-                          className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-2 py-1 text-[10px] text-slate-700"
-                        >
-                          <input
-                            type="checkbox"
-                            name="allergenDefaults"
-                            value={allergen}
-                            defaultChecked={editingItem.item.allergens.includes(allergen)}
-                            className="h-3 w-3 rounded border-slate-300 text-emerald-600"
-                          />
+                        <label key={allergen} className="inline-flex items-center gap-1.5 rounded-[4px] px-2 py-1 text-[10px] cursor-pointer" style={{ border: '1px solid #4A3F35', color: '#9C8B7A', fontFamily: 'var(--font-body)' }}>
+                          <input type="checkbox" name="allergenDefaults" value={allergen} defaultChecked={editingItem.item.allergens.includes(allergen)} className="h-3 w-3" style={{ accentColor: '#C9A962' }} />
                           <span>{allergen}</span>
                         </label>
                       ))}
                     </div>
-                    <input
-                      name="allergensCustom"
-                      defaultValue={editingItem.item.allergens
-                        .filter((a) => !DEFAULT_ALLERGENS.includes(a))
-                        .join(', ')}
-                      className="mt-1 w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                      placeholder="Custom allergens (comma separated, optional)"
-                    />
+                    <input name="allergensCustom" defaultValue={editingItem.item.allergens.filter((a) => !DEFAULT_ALLERGENS.includes(a)).join(', ')} className="input-academia" style={{ height: '2.5rem', fontSize: '12px' }} placeholder="Custom allergens (comma separated)" />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-medium text-slate-700">
-                      Tags (choose or add custom)
-                    </span>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="label-academia">Tags</span>
                     <div className="flex flex-wrap gap-1">
                       {DEFAULT_TAGS.map((tag) => (
-                        <label
-                          key={tag}
-                          className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-2 py-1 text-[10px] text-slate-700"
-                        >
-                          <input
-                            type="checkbox"
-                            name="tagDefaults"
-                            value={tag}
-                            defaultChecked={editingItem.item.tags.includes(tag)}
-                            className="h-3 w-3 rounded border-slate-300 text-emerald-600"
-                          />
+                        <label key={tag} className="inline-flex items-center gap-1.5 rounded-[4px] px-2 py-1 text-[10px] cursor-pointer" style={{ border: '1px solid #4A3F35', color: '#9C8B7A', fontFamily: 'var(--font-body)' }}>
+                          <input type="checkbox" name="tagDefaults" value={tag} defaultChecked={editingItem.item.tags.includes(tag)} className="h-3 w-3" style={{ accentColor: '#C9A962' }} />
                           <span>{tag}</span>
                         </label>
                       ))}
                     </div>
-                    <input
-                      name="tagsCustom"
-                      defaultValue={editingItem.item.tags
-                        .filter((t) => !DEFAULT_TAGS.includes(t))
-                        .join(', ')}
-                      className="mt-1 w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                      placeholder="Custom tags (comma separated, optional)"
-                    />
+                    <input name="tagsCustom" defaultValue={editingItem.item.tags.filter((t) => !DEFAULT_TAGS.includes(t)).join(', ')} className="input-academia" style={{ height: '2.5rem', fontSize: '12px' }} placeholder="Custom tags (comma separated)" />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-medium text-slate-700">
-                      Item photo
-                    </span>
-                    <label className="group flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2 text-[11px] text-slate-600 hover:border-emerald-400 hover:bg-emerald-50/40">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-semibold text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-700">
-                        JPG/PNG
+                  <div className="flex flex-col gap-1.5">
+                    <span className="label-academia">Item Photo</span>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-[4px] px-3 py-2.5 transition-colors duration-150" style={{ border: '1px dashed #4A3F35', backgroundColor: 'rgba(201,169,98,0.03)' }}>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-[4px] text-[9px]" style={{ backgroundColor: '#3D332B', color: '#9C8B7A', fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
+                        IMG
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-medium text-slate-800 group-hover:text-emerald-800">
-                          {editingItem.item.imageUrl ? 'Change image' : 'Upload image'}
-                        </span>
-                        <span className="text-[10px] text-slate-500">
-                          Square image works best · max 5MB
-                        </span>
-                        {editItemImagePreview && (
-                          <span className="mt-1 text-[10px] text-emerald-700">
-                            Preview selected below
-                          </span>
-                        )}
+                        <span className="text-[11px]" style={{ fontFamily: 'var(--font-body)', color: '#E8DFD4' }}>{editingItem.item.imageUrl ? 'Change image' : 'Upload image'}</span>
+                        <span className="text-[10px]" style={{ color: '#9C8B7A' }}>Square · max 5MB</span>
+                        {editItemImagePreview && <span className="mt-0.5 text-[10px]" style={{ color: '#C9A962' }}>Preview below</span>}
                       </div>
-                      <input
-                        type="file"
-                        name="image"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (file) {
-                            const url = URL.createObjectURL(file)
-                            setEditItemImagePreview(url)
-                          } else {
-                            setEditItemImagePreview(null)
-                          }
-                        }}
-                      />
+                      <input type="file" name="image" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; setEditItemImagePreview(f ? URL.createObjectURL(f) : null) }} />
                     </label>
                     {(editingItem.item.imageUrl || editItemImagePreview) && (
-                      <div className="mt-2 flex items-center gap-3">
-                        <div className="h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                          <img
-                            src={editItemImagePreview ?? editingItem.item.imageUrl ?? ''}
-                            alt="New image preview"
-                            className="h-full w-full object-cover"
-                          />
+                      <div className="flex items-center gap-3 rounded-[4px] px-3 py-2" style={{ border: '1px solid #4A3F35', backgroundColor: '#251E19' }}>
+                        <div className="h-12 w-12 overflow-hidden rounded-[4px]" style={{ border: '1px solid #4A3F35' }}>
+                          <img src={editItemImagePreview ?? editingItem.item.imageUrl ?? ''} alt="Preview" className="h-full w-full object-cover img-sepia" />
                         </div>
                         {editItemImagePreview && (
-                          <button
-                            type="button"
-                            className="text-[11px] font-medium text-rose-600 hover:text-rose-700"
-                            onClick={() => {
-                              setEditItemImagePreview(null)
-                            }}
-                          >
+                          <button type="button" className="text-[11px] transition-colors duration-150" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#C07080' }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9C8B7A' }} onClick={() => setEditItemImagePreview(null)}>
                             Remove new image
                           </button>
                         )}
                       </div>
                     )}
                     {editingItem.item.imageUrl && !editItemImagePreview && (
-                      <label className="mt-1 inline-flex items-center gap-2 text-[11px] text-slate-700">
-                        <input type="checkbox" name="removeImage" className="h-3 w-3" />
+                      <label className="mt-1 inline-flex items-center gap-2 text-[11px] cursor-pointer" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
+                        <input type="checkbox" name="removeImage" className="h-3 w-3" style={{ accentColor: '#C9A962' }} />
                         <span>Remove existing image</span>
                       </label>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-medium text-slate-700">
-                      Availability
-                    </span>
-                    <label className="inline-flex items-center gap-2 text-[11px] text-slate-700">
-                      <input
-                        type="checkbox"
-                        name="available"
-                        defaultChecked={editingItem.item.available ?? true}
-                        className="h-3 w-3"
-                      />
+                  <div className="flex flex-col gap-1.5">
+                    <span className="label-academia">Availability</span>
+                    <label className="inline-flex items-center gap-2 text-[11px] cursor-pointer" style={{ fontFamily: 'var(--font-body)', color: '#9C8B7A' }}>
+                      <input type="checkbox" name="available" defaultChecked={editingItem.item.available ?? true} className="h-3 w-3" style={{ accentColor: '#C9A962' }} />
                       <span>Item available for ordering</span>
                     </label>
                   </div>
                 </div>
-                <div className="mt-3 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    className="min-h-[44px] touch-manipulation rounded-full border border-slate-200 bg-white px-4 py-2 text-xs text-slate-700 hover:bg-slate-50"
-                    disabled={saving}
-                    onClick={() => setEditingItem(null)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="min-h-[44px] touch-manipulation rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                    disabled={saving}
-                  >
-                    Save changes
-                  </button>
+                <div className="flex justify-end gap-2 pt-1">
+                  <button type="button" className="btn-outline" disabled={saving} onClick={() => setEditingItem(null)}>Cancel</button>
+                  <button type="submit" className="btn-brass" disabled={saving}>Save Changes</button>
                 </div>
               </form>
             </div>
