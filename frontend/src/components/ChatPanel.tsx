@@ -106,7 +106,6 @@ export default function ChatPanel({ restaurantId, tableKey, open, onClose, curre
         <div className="flex items-center justify-between border-b border-emerald-100 bg-emerald-50/90 px-4 py-3 rounded-t-3xl">
           <div>
             <h2 className="text-sm font-semibold text-slate-900">Ask before ordering</h2>
-            <p className="text-xs text-slate-600">Questions about the menu, allergens or ideas.</p>
           </div>
           <div className="flex items-center gap-3">
             <button
