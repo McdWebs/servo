@@ -50,5 +50,6 @@ export interface CartItem {
   price: number
   quantity: number
   notes?: string
+  imageUrl?: string
 }
 

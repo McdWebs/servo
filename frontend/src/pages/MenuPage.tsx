@@ -385,6 +385,7 @@ function MenuPageInner() {
         }}
         restaurantId={data.restaurant._id}
         currencySymbol={currencySymbol}
+        menuItems={data?.categories?.flatMap((c) => c.items) ?? []}
       />
       <ChatPanel
         restaurantId={data.restaurant._id}
