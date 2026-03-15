@@ -199,7 +199,7 @@ export default function CartDrawer({
                   className="h-full w-full object-contain"
                 />
               </div>
-              <p className="text-xs font-medium text-slate-800">Your table is still empty</p>
+              <p className="text-xs font-medium text-slate-800">Your cart is still empty</p>
               <p className="text-[11px] text-slate-500">
                 Browse the menu and tap <span className="font-semibold">Add</span> to start building
                 your order.

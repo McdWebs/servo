@@ -43,6 +43,12 @@ const OPENING_HOURS_PRESETS = [
   { label: 'Breakfast & lunch (07–15)', value: 'Mon–Sun 07:00–15:00' },
 ] as const
 
+const BUSINESS_PLAN_TIME_PRESETS = [
+  { label: 'Sun–Thu 12:00–16:00', value: 'Sun–Thu 12:00–16:00' },
+  { label: 'Weekdays 12:00–15:00', value: 'Mon–Fri 12:00–15:00' },
+  { label: 'Lunch only 12:00–16:00', value: 'Lunch only 12:00–16:00' },
+] as const
+
 const TIMEZONES = [
   'UTC',
   'America/New_York',
@@ -76,6 +82,11 @@ export default function OwnerSettingsPage() {
     aiInstructions: '',
     printerEnabled: false,
     printerName: '',
+    businessPlanEnabled: false,
+    businessPlanTitle: 'עסקית',
+    businessPlanDescription: '',
+    businessPlanTimeNote: '',
+    businessPlanPrice: '' as number | '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -115,6 +126,12 @@ export default function OwnerSettingsPage() {
         aiInstructions: restaurant.aiInstructions ?? '',
         printerEnabled: restaurant.printerEnabled ?? false,
         printerName: restaurant.printerName ?? '',
+        businessPlanEnabled: restaurant.businessPlanEnabled ?? false,
+        businessPlanTitle: restaurant.businessPlanTitle ?? 'עסקית',
+        businessPlanDescription: restaurant.businessPlanDescription ?? '',
+        businessPlanTimeNote: restaurant.businessPlanTimeNote ?? '',
+        businessPlanPrice:
+          restaurant.businessPlanPrice != null ? restaurant.businessPlanPrice : '',
       })
     }
   }, [restaurant])
@@ -160,6 +177,13 @@ export default function OwnerSettingsPage() {
       body.aiInstructions = form.aiInstructions.trim()
       body.printerEnabled = form.printerEnabled
       body.printerName = form.printerName.trim() || undefined
+      body.businessPlanEnabled = form.businessPlanEnabled
+      body.businessPlanTitle = form.businessPlanTitle.trim() || undefined
+      body.businessPlanDescription = form.businessPlanDescription.trim() || undefined
+      body.businessPlanTimeNote = form.businessPlanTimeNote.trim() || undefined
+      if (typeof form.businessPlanPrice === 'number') {
+        body.businessPlanPrice = form.businessPlanPrice
+      }
       const updated = await apiFetch<Restaurant>(`/api/restaurants/${restaurant._id}`, {
         method: 'PATCH',
         token,
@@ -262,7 +286,16 @@ export default function OwnerSettingsPage() {
       (restaurant.serviceChargePercent != null ? restaurant.serviceChargePercent : '') &&
     (form.aiInstructions ?? '').trim() === (restaurant.aiInstructions ?? '').trim() &&
     form.printerEnabled === (restaurant.printerEnabled ?? false) &&
-    (form.printerName ?? '') === (restaurant.printerName ?? '')
+    (form.printerName ?? '') === (restaurant.printerName ?? '') &&
+    form.businessPlanEnabled === (restaurant.businessPlanEnabled ?? false) &&
+    (form.businessPlanTitle ?? 'עסקית') ===
+      (restaurant.businessPlanTitle ?? 'עסקית') &&
+    (form.businessPlanDescription ?? '') ===
+      (restaurant.businessPlanDescription ?? '') &&
+    (form.businessPlanTimeNote ?? '') ===
+      (restaurant.businessPlanTimeNote ?? '') &&
+    form.businessPlanPrice ===
+      (restaurant.businessPlanPrice != null ? restaurant.businessPlanPrice : '')
 
   return (
     <div className="space-y-4">
@@ -440,6 +473,7 @@ export default function OwnerSettingsPage() {
               </div>
             </div>
           </div>
+
 
           <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:py-4">
             <h2 className="text-sm font-semibold text-slate-900">Contact</h2>

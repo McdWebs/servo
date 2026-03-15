@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { io, type Socket } from 'socket.io-client'
-import { CartProvider } from '../components/CartContext'
-import type { MenuCategory, Restaurant } from '../components/types'
+import { CartProvider, useCart } from '../components/CartContext'
+import type { BusinessPlan, MenuCategory, Restaurant } from '../components/types'
 import MenuItemCard from '../components/MenuItemCard'
 import CartSummary from '../components/CartSummary'
 import ChatPanel from '../components/ChatPanel'
@@ -19,6 +19,7 @@ type OrderStatus = 'new' | 'preparing' | 'ready'
 interface MenuResponse {
   restaurant: Restaurant
   categories: MenuCategory[]
+  businessPlans?: BusinessPlan[]
 }
 
 function getCurrencySymbol(currency?: string) {
@@ -318,6 +319,12 @@ function MenuPageInner() {
         </nav>
         */}
         <main className="space-y-6 pb-4">
+          {data.businessPlans && data.businessPlans.length > 0 && (
+            <BusinessPlansSection
+              plans={data.businessPlans}
+              currencySymbol={currencySymbol}
+            />
+          )}
           {filteredCategories.length === 0 ? (
             <p className="py-6 text-center text-sm text-slate-500">
               No items match &quot;{searchQuery}&quot;. Try a different search.
@@ -424,6 +431,196 @@ export default function MenuPage() {
     <CartProvider>
       <MenuPageInner />
     </CartProvider>
+  )
+}
+
+function BusinessPlansSection({
+  plans,
+  currencySymbol,
+}: {
+  plans: BusinessPlan[]
+  currencySymbol: string
+}) {
+  const { addItem } = useCart()
+
+  const handleAddPlanToCart = (plan: BusinessPlan) => {
+    if (!plan.items.length) return
+
+    const firstId = plan.items[0]._id
+
+    for (const entry of plan.items) {
+      const quantity = entry.quantity && entry.quantity > 0 ? entry.quantity : 1
+      const isPricingItem = entry._id === firstId
+
+      const overriddenPrice = isPricingItem ? plan.price : 0
+
+      addItem({ ...entry, price: overriddenPrice }, quantity)
+    }
+  }
+
+  if (!plans.length) return null
+
+  const now = new Date()
+
+  return (
+    <section className="space-y-2">
+      <h2 className="mb-1 text-sm font-semibold tracking-wide text-slate-800 uppercase">
+        עסקיות
+      </h2>
+      <div className="space-y-2">
+        {plans.map((plan) => {
+          const available = isBusinessPlanCurrentlyAvailable(plan.timeNote ?? '', now)
+          return (
+            <div
+              key={plan._id}
+              className={`flex w-full items-center justify-between gap-3 overflow-hidden rounded-xl border px-3 py-2 text-left shadow-sm transition ${
+                available
+                  ? 'border-slate-200/90 bg-white'
+                  : 'border-slate-100 bg-slate-50/80 opacity-70'
+              }`}
+            >
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-semibold text-slate-900">
+                  {plan.name || 'עסקית'}
+                </h3>
+                <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-600">
+                  <span className="font-medium">
+                    {currencySymbol}
+                    {plan.price.toFixed(2)}
+                  </span>
+                  {plan.timeNote && (
+                    <span className="truncate text-[11px] text-slate-500">
+                      · {plan.timeNote}
+                    </span>
+                  )}
+                  {!available && (
+                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-700">
+                      Not available now
+                    </span>
+                  )}
+                </div>
+                {plan.description && (
+                  <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-600">
+                    {plan.description}
+                  </p>
+                )}
+                {plan.items.length > 0 && (
+                  <p className="mt-0.5 line-clamp-1 text-[11px] text-slate-500">
+                    Includes:{' '}
+                    {plan.items
+                      .map((item) =>
+                        `${item.quantity > 1 ? `${item.quantity}× ` : ''}${item.name}`
+                      )
+                      .join(', ')}
+                  </p>
+                )}
+              </div>
+              <div className="shrink-0 flex flex-col items-end gap-1">
+                <button
+                  type="button"
+                  className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold text-white ${
+                    available
+                      ? 'bg-emerald-600 hover:bg-emerald-700'
+                      : 'bg-slate-400 cursor-not-allowed'
+                  }`}
+                  onClick={() => {
+                    if (!available) return
+                    handleAddPlanToCart(plan)
+                  }}
+                  disabled={!available}
+                >
+                  Add
+                </button>
+                {plan.items.length > 0 && (
+                  <span className="text-[10px] text-slate-500">
+                    {plan.items.length} item{plan.items.length === 1 ? '' : 's'}
+                  </span>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function isBusinessPlanCurrentlyAvailable(timeNote: string, now: Date): boolean {
+  const trimmed = timeNote.trim()
+  if (!trimmed) return true
+
+  const day = now.getDay() // 0-6, Sun-Sat
+  const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes()
+
+  const parseTime = (t: string): number | null => {
+    const [h, m] = t.split(':')
+    const hh = Number(h)
+    const mm = Number(m ?? '0')
+    if (Number.isNaN(hh) || Number.isNaN(mm)) return null
+    return hh * 60 + mm
+  }
+
+  const dayIndexFromToken = (token: string): number | null => {
+    const lower = token.toLowerCase()
+    if (lower.startsWith('sun')) return 0
+    if (lower.startsWith('mon')) return 1
+    if (lower.startsWith('tue')) return 2
+    if (lower.startsWith('wed')) return 3
+    if (lower.startsWith('thu')) return 4
+    if (lower.startsWith('fri')) return 5
+    if (lower.startsWith('sat')) return 6
+    if (lower.startsWith('weekday')) return -1 // special handled below
+    return null
+  }
+
+  const normalize = trimmed
+    .replace(/\s+/g, ' ')
+    .replace(/[–—]/g, '-')
+
+  // Expect something like "Sun-Thu 12:00-16:00" or "Weekdays 11:30-16:00"
+  const match = normalize.match(/^([^0-9]+)\s+(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/)
+  if (!match) {
+    // If we can't confidently parse, don't block the plan.
+    return true
+  }
+
+  const dayPart = match[1].trim()
+  const startStr = match[2]
+  const endStr = match[3]
+
+  const startMinutes = parseTime(startStr)
+  const endMinutes = parseTime(endStr)
+  if (startMinutes == null || endMinutes == null) return true
+
+  const days: number[] = []
+  const segments = dayPart.split(',').map((s) => s.trim())
+
+  for (const seg of segments) {
+    if (!seg) continue
+    if (/^weekdays?/i.test(seg)) {
+      // Mon-Fri
+      days.push(1, 2, 3, 4, 5)
+      continue
+    }
+    const [fromToken, toToken] = seg.split('-').map((s) => s.trim())
+    const fromIdx = dayIndexFromToken(fromToken)
+    const toIdx = toToken ? dayIndexFromToken(toToken) : fromIdx
+    if (fromIdx == null || toIdx == null) continue
+    if (fromIdx <= toIdx) {
+      for (let d = fromIdx; d <= toIdx; d++) days.push(d)
+    } else {
+      // e.g. Fri-Mon
+      for (let d = fromIdx; d <= 6; d++) days.push(d)
+      for (let d = 0; d <= toIdx; d++) days.push(d)
+    }
+  }
+
+  if (!days.length) return true
+
+  return (
+    days.includes(day) &&
+    minutesSinceMidnight >= startMinutes &&
+    minutesSinceMidnight <= endMinutes
   )
 }
 

@@ -25,6 +25,14 @@ export interface RestaurantDocument extends Document {
   printerName?: string
   /** Optional logo image URL for guest menu & admin views. */
   logoUrl?: string
+  /** Optional “business plan meal” (עסקית) configuration. */
+  businessPlanEnabled?: boolean
+  businessPlanTitle?: string
+  businessPlanDescription?: string
+  /** Display-only text for when the plan is available (e.g. days/hours). */
+  businessPlanTimeNote?: string
+  /** Flat price for the business plan meal. */
+  businessPlanPrice?: number
 }
 
 const restaurantSchema = new Schema<RestaurantDocument>({
@@ -47,6 +55,11 @@ const restaurantSchema = new Schema<RestaurantDocument>({
   printerEnabled: { type: Boolean, default: false },
   printerName: { type: String, trim: true },
   logoUrl: { type: String },
+  businessPlanEnabled: { type: Boolean, default: false },
+  businessPlanTitle: { type: String, trim: true },
+  businessPlanDescription: { type: String, trim: true },
+  businessPlanTimeNote: { type: String, trim: true },
+  businessPlanPrice: { type: Number },
 })
 
 export const Restaurant = model<RestaurantDocument>('Restaurant', restaurantSchema)

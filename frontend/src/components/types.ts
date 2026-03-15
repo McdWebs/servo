@@ -14,6 +14,21 @@ export interface SuggestedItem extends MenuItem {
   quantity: number
 }
 
+export interface BusinessPlanItem extends MenuItem {
+  quantity: number
+}
+
+export interface BusinessPlan {
+  _id: string
+  name: string
+  description?: string
+  timeNote?: string
+  price: number
+  position?: number
+  active?: boolean
+  items: BusinessPlanItem[]
+}
+
 export interface MenuCategory {
   _id: string
   name: string
@@ -42,6 +57,12 @@ export interface Restaurant {
   printerEnabled?: boolean
   printerName?: string
   logoUrl?: string
+  businessPlanEnabled?: boolean
+  businessPlanTitle?: string
+  businessPlanDescription?: string
+  /** Display-only text for when the plan is available (e.g. days/hours). */
+  businessPlanTimeNote?: string
+  businessPlanPrice?: number
 }
 
 export interface CartItem {

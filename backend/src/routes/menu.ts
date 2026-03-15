@@ -3,6 +3,7 @@ import { Types } from 'mongoose'
 import { Restaurant } from '../models/Restaurant'
 import { MenuCategory } from '../models/MenuCategory'
 import { MenuItem } from '../models/MenuItem'
+import { BusinessPlan } from '../models/BusinessPlan'
 import { authenticateOwner } from '../middleware/auth'
 import multer from 'multer'
 import { uploadMenuItemImage, uploadRestaurantLogo } from '../services/s3Client'
@@ -42,7 +43,56 @@ router.get('/restaurants/:slug/menu', async (req, res) => {
       items: itemsForGuests.filter((item) => item.categoryId.toString() === category._id.toString()),
     }))
 
-    return res.json({ restaurant, categories: categoriesWithItems })
+    const businessPlansRaw = await BusinessPlan.find({
+      restaurantId: restaurant._id,
+      active: true,
+    })
+      .sort({ position: 1, name: 1 })
+      .lean()
+
+    const businessPlans = businessPlansRaw.map((plan) => {
+      const planItems = (plan.items ?? []).map((entry) => {
+        const mi = itemsForGuests.find(
+          (it) => it._id.toString() === entry.menuItemId.toString()
+        )
+        if (!mi) return null
+        return {
+          _id: mi._id,
+          name: mi.name,
+          description: mi.description,
+          price: mi.price,
+          allergens: mi.allergens ?? [],
+          tags: mi.tags ?? [],
+          position: mi.position,
+          imageUrl: mi.imageUrl,
+          available: mi.available,
+          quantity: entry.quantity && entry.quantity > 0 ? entry.quantity : 1,
+        }
+      }).filter((v) => v !== null) as {
+        _id: typeof items[0]['_id']
+        name: string
+        description: string
+        price: number
+        allergens: string[]
+        tags: string[]
+        position?: number
+        imageUrl?: string
+        available?: boolean
+        quantity: number
+      }[]
+
+      return {
+        _id: plan._id,
+        name: plan.name,
+        description: plan.description,
+        timeNote: plan.timeNote,
+        price: plan.price,
+        position: plan.position,
+        items: planItems,
+      }
+    })
+
+    return res.json({ restaurant, categories: categoriesWithItems, businessPlans })
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error(err)
@@ -130,7 +180,43 @@ router.get('/restaurants/:restaurantId/admin-menu', authenticateOwner, async (re
       items: items.filter((item) => item.categoryId.toString() === category._id.toString()),
     }))
 
-    return res.json({ restaurant, categories: categoriesWithItems })
+    const businessPlansRaw = await BusinessPlan.find({
+      restaurantId: restaurant._id,
+    })
+      .sort({ position: 1, name: 1 })
+      .lean()
+
+    const businessPlans = businessPlansRaw.map((plan) => {
+      const planItems = (plan.items ?? []).map((entry) => {
+        const mi = items.find((it) => it._id.toString() === entry.menuItemId.toString())
+        if (!mi) return null
+        return {
+          _id: mi._id,
+          name: mi.name,
+          description: mi.description,
+          price: mi.price,
+          allergens: mi.allergens ?? [],
+          tags: mi.tags ?? [],
+          position: mi.position,
+          imageUrl: mi.imageUrl,
+          available: mi.available,
+          quantity: entry.quantity && entry.quantity > 0 ? entry.quantity : 1,
+        }
+      }).filter((v) => v !== null)
+
+      return {
+        _id: plan._id,
+        name: plan.name,
+        description: plan.description,
+        timeNote: plan.timeNote,
+        price: plan.price,
+        position: plan.position,
+        active: plan.active,
+        items: planItems,
+      }
+    })
+
+    return res.json({ restaurant, categories: categoriesWithItems, businessPlans })
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error(err)
@@ -182,6 +268,16 @@ router.patch('/restaurants/:restaurantId', authenticateOwner, async (req, res) =
     }
     if (typeof body.printerEnabled === 'boolean') update.printerEnabled = body.printerEnabled
     if (typeof body.printerName === 'string') update.printerName = body.printerName.trim() || undefined
+    if (typeof body.businessPlanEnabled === 'boolean')
+      update.businessPlanEnabled = body.businessPlanEnabled
+    if (typeof body.businessPlanTitle === 'string')
+      update.businessPlanTitle = body.businessPlanTitle.trim() || undefined
+    if (typeof body.businessPlanDescription === 'string')
+      update.businessPlanDescription = body.businessPlanDescription.trim() || undefined
+    if (typeof body.businessPlanTimeNote === 'string')
+      update.businessPlanTimeNote = body.businessPlanTimeNote.trim() || undefined
+    if (typeof body.businessPlanPrice === 'number' && body.businessPlanPrice >= 0)
+      update.businessPlanPrice = body.businessPlanPrice
     if (typeof body.logoUrl === 'string') {
       const trimmed = body.logoUrl.trim()
       if (trimmed) {
@@ -294,6 +390,224 @@ router.post('/restaurants/:restaurantId/categories', authenticateOwner, async (r
     // eslint-disable-next-line no-console
     console.error(err)
     return res.status(500).json({ message: 'Failed to create category' })
+  }
+})
+
+router.get('/restaurants/:restaurantId/business-plans', authenticateOwner, async (req, res) => {
+  try {
+    const restaurantIdParam = String(req.params.restaurantId)
+
+    if (!Types.ObjectId.isValid(restaurantIdParam)) {
+      return res.status(400).json({ message: 'Invalid restaurantId' })
+    }
+
+    const ownerRestaurantId = (req as any).ownerRestaurantId as string | undefined
+    if (!ownerRestaurantId || ownerRestaurantId !== restaurantIdParam) {
+      return res.status(403).json({ message: 'Forbidden' })
+    }
+
+    const plans = await BusinessPlan.find({
+      restaurantId: new Types.ObjectId(restaurantIdParam),
+    })
+      .sort({ position: 1, name: 1 })
+      .lean()
+
+    return res.json(plans)
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err)
+    return res.status(500).json({ message: 'Failed to load business plans' })
+  }
+})
+
+router.post('/restaurants/:restaurantId/business-plans', authenticateOwner, async (req, res) => {
+  try {
+    const restaurantIdParam = String(req.params.restaurantId)
+    const body = req.body as {
+      name?: string
+      description?: string
+      timeNote?: string
+      price?: number
+      items?: { menuItemId?: string; quantity?: number }[]
+      active?: boolean
+    }
+
+    if (!Types.ObjectId.isValid(restaurantIdParam)) {
+      return res.status(400).json({ message: 'Invalid restaurantId' })
+    }
+
+    const ownerRestaurantId = (req as any).ownerRestaurantId as string | undefined
+    if (!ownerRestaurantId || ownerRestaurantId !== restaurantIdParam) {
+      return res.status(403).json({ message: 'Forbidden' })
+    }
+
+    const name = typeof body.name === 'string' ? body.name.trim() : ''
+    const price = typeof body.price === 'number' ? body.price : NaN
+    if (!name) {
+      return res.status(400).json({ message: 'Name is required' })
+    }
+    if (!Number.isFinite(price) || price < 0) {
+      return res.status(400).json({ message: 'Price must be a non-negative number' })
+    }
+
+    const itemsInput = Array.isArray(body.items) ? body.items : []
+    const items = itemsInput
+      .map((entry) => {
+        if (!entry?.menuItemId || !Types.ObjectId.isValid(entry.menuItemId)) return null
+        const quantity =
+          typeof entry.quantity === 'number' && entry.quantity > 0 ? entry.quantity : 1
+        return {
+          menuItemId: new Types.ObjectId(entry.menuItemId),
+          quantity,
+        }
+      })
+      .filter((v) => v !== null) as { menuItemId: Types.ObjectId; quantity: number }[]
+
+    const existing = await BusinessPlan.find({
+      restaurantId: new Types.ObjectId(restaurantIdParam),
+    })
+      .sort({ position: -1 })
+      .limit(1)
+      .lean()
+    const last = existing[0]
+    const nextPosition =
+      last && typeof last.position === 'number' ? last.position + 1 : 0
+
+    const description =
+      typeof body.description === 'string' ? body.description.trim() : undefined
+    const timeNote = typeof body.timeNote === 'string' ? body.timeNote.trim() : undefined
+
+    const plan = await BusinessPlan.create({
+      restaurantId: new Types.ObjectId(restaurantIdParam),
+      name,
+      price,
+      position: nextPosition,
+      active: body.active !== false,
+      items,
+      ...(description ? { description } : {}),
+      ...(timeNote ? { timeNote } : {}),
+    })
+
+    return res.status(201).json(plan)
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err)
+    return res.status(500).json({ message: 'Failed to create business plan' })
+  }
+})
+
+router.patch('/business-plans/:businessPlanId', authenticateOwner, async (req, res) => {
+  try {
+    const planIdParam = String(req.params.businessPlanId)
+    const body = req.body as {
+      name?: string
+      description?: string
+      timeNote?: string
+      price?: number
+      position?: number
+      active?: boolean
+      items?: { menuItemId?: string; quantity?: number }[]
+    }
+
+    if (!Types.ObjectId.isValid(planIdParam)) {
+      return res.status(400).json({ message: 'Invalid businessPlanId' })
+    }
+
+    const ownerRestaurantId = (req as any).ownerRestaurantId as string | undefined
+    if (!ownerRestaurantId || !Types.ObjectId.isValid(ownerRestaurantId)) {
+      return res.status(403).json({ message: 'Forbidden' })
+    }
+    const ownerRestaurantObjectId = new Types.ObjectId(ownerRestaurantId)
+
+    const existing = await BusinessPlan.findById(planIdParam).lean()
+    if (!existing || existing.restaurantId.toString() !== ownerRestaurantObjectId.toString()) {
+      return res.status(404).json({ message: 'Business plan not found' })
+    }
+
+    const update: Record<string, unknown> = {}
+
+    if (typeof body.name === 'string') {
+      const trimmed = body.name.trim()
+      if (!trimmed) {
+        return res.status(400).json({ message: 'Name cannot be empty' })
+      }
+      update.name = trimmed
+    }
+    if (typeof body.description === 'string') {
+      update.description = body.description.trim() || undefined
+    }
+    if (typeof body.timeNote === 'string') {
+      update.timeNote = body.timeNote.trim() || undefined
+    }
+    if (typeof body.price === 'number') {
+      if (body.price < 0) {
+        return res.status(400).json({ message: 'Price must be a non-negative number' })
+      }
+      update.price = body.price
+    }
+    if (typeof body.position === 'number' && !Number.isNaN(body.position)) {
+      update.position = body.position
+    }
+    if (typeof body.active === 'boolean') {
+      update.active = body.active
+    }
+    if (Array.isArray(body.items)) {
+      const items = body.items
+        .map((entry) => {
+          if (!entry?.menuItemId || !Types.ObjectId.isValid(entry.menuItemId)) return null
+          const quantity =
+            typeof entry.quantity === 'number' && entry.quantity > 0 ? entry.quantity : 1
+          return {
+            menuItemId: new Types.ObjectId(entry.menuItemId),
+            quantity,
+          }
+        })
+        .filter((v) => v !== null) as { menuItemId: Types.ObjectId; quantity: number }[]
+      update.items = items
+    }
+
+    const plan = await BusinessPlan.findByIdAndUpdate(planIdParam, update, {
+      returnDocument: 'after',
+    }).lean()
+
+    if (!plan) {
+      return res.status(404).json({ message: 'Business plan not found' })
+    }
+
+    return res.json(plan)
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err)
+    return res.status(500).json({ message: 'Failed to update business plan' })
+  }
+})
+
+router.delete('/business-plans/:businessPlanId', authenticateOwner, async (req, res) => {
+  try {
+    const planIdParam = String(req.params.businessPlanId)
+
+    if (!Types.ObjectId.isValid(planIdParam)) {
+      return res.status(400).json({ message: 'Invalid businessPlanId' })
+    }
+
+    const ownerRestaurantId = (req as any).ownerRestaurantId as string | undefined
+    if (!ownerRestaurantId || !Types.ObjectId.isValid(ownerRestaurantId)) {
+      return res.status(403).json({ message: 'Forbidden' })
+    }
+    const ownerRestaurantObjectId = new Types.ObjectId(ownerRestaurantId)
+
+    const existing = await BusinessPlan.findById(planIdParam).lean()
+    if (!existing || existing.restaurantId.toString() !== ownerRestaurantObjectId.toString()) {
+      return res.status(404).json({ message: 'Business plan not found' })
+    }
+
+    await BusinessPlan.deleteOne({ _id: new Types.ObjectId(planIdParam) })
+
+    return res.json({ success: true })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err)
+    return res.status(500).json({ message: 'Failed to delete business plan' })
   }
 })
 
