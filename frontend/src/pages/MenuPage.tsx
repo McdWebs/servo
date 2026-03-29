@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { io, type Socket } from 'socket.io-client'
 import { CartProvider, useCart } from '../components/CartContext'
@@ -52,6 +52,11 @@ function MenuPageInner() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<'all' | string>('all')
   const tableFromUrl = searchParams.get('table') ?? undefined
   const tableKey = tableFromUrl ?? 'default'
+  const [manualTable, setManualTable] = useState('')
+  const [tableConfirmed, setTableConfirmed] = useState(false)
+
+  // Effective table: URL param takes priority, then manually entered
+  const effectiveTable = tableFromUrl ?? (tableConfirmed ? manualTable.trim() : undefined)
   const latestOrderIdRef = useRef<string | null>(null)
   const [latestOrderStatus, setLatestOrderStatus] = useState<OrderStatus | null>(null)
 
@@ -78,7 +83,7 @@ function MenuPageInner() {
 
   useEffect(() => {
     const loadLatestOrderStatus = async () => {
-      if (!data?.restaurant?._id || !tableFromUrl) {
+      if (!data?.restaurant?._id || !effectiveTable) {
         latestOrderIdRef.current = null
         setLatestOrderStatus(null)
         return
@@ -93,7 +98,7 @@ function MenuPageInner() {
         if (!res.ok) {
           return
         }
-        const forTable = orders.filter((o) => o.tableNumber === tableFromUrl)
+        const forTable = orders.filter((o) => o.tableNumber === effectiveTable)
         if (forTable.length === 0) {
           latestOrderIdRef.current = null
           setLatestOrderStatus(null)
@@ -107,7 +112,7 @@ function MenuPageInner() {
       }
     }
     void loadLatestOrderStatus()
-  }, [data?.restaurant?._id, tableFromUrl])
+  }, [data?.restaurant?._id, effectiveTable])
 
   useEffect(() => {
     if (!data?.restaurant?._id) return
@@ -116,7 +121,7 @@ function MenuPageInner() {
     socket.emit('join-restaurant', data.restaurant._id)
 
     socket.on('order:new', (order: { _id: string; status: OrderStatus; tableNumber?: string }) => {
-      if (tableFromUrl && order.tableNumber === tableFromUrl) {
+      if (effectiveTable && order.tableNumber === effectiveTable) {
         latestOrderIdRef.current = order._id
         setLatestOrderStatus(order.status)
       }
@@ -201,11 +206,43 @@ function MenuPageInner() {
               </div>
             )}
           </div>
-          {tableFromUrl && (
+          {effectiveTable ? (
             <div className="absolute inset-y-2 right-3 flex items-center">
               <span className="shrink-0 rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-semibold text-white">
-                Table {tableFromUrl}
+                Table {effectiveTable}
               </span>
+            </div>
+          ) : (
+            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+              <p className="text-xs font-medium text-amber-800">Which table are you at?</p>
+              <form
+                className="mt-2 flex items-center gap-2"
+                onSubmit={(e: FormEvent<HTMLFormElement>) => {
+                  e.preventDefault()
+                  if (manualTable.trim()) setTableConfirmed(true)
+                }}
+              >
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Table number"
+                  value={manualTable}
+                  onChange={(e) => {
+                    setManualTable(e.target.value)
+                    setTableConfirmed(false)
+                  }}
+                  className="w-28 rounded-full border border-amber-300 bg-white px-3 py-1.5 text-xs text-slate-900 outline-none placeholder:text-slate-400 focus:border-amber-400"
+                />
+                <button
+                  type="submit"
+                  className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700"
+                >
+                  Confirm
+                </button>
+              </form>
+              <p className="mt-1.5 text-[11px] text-amber-700">
+                Scan the QR code at your table for a faster experience.
+              </p>
             </div>
           )}
           {latestOrderStatus === 'new' && (
@@ -406,7 +443,7 @@ function MenuPageInner() {
           restaurantId={data.restaurant._id}
           open={billOpen}
           onClose={() => setBillOpen(false)}
-          tableNumber={tableFromUrl}
+          tableNumber={effectiveTable}
           currencySymbol={currencySymbol}
         />
       )}
@@ -418,9 +455,57 @@ function MenuPageInner() {
           onConfirmed={() => {
             // Status will be updated via sockets / fetch; no extra flag needed here
           }}
-          initialTable={tableFromUrl}
+          initialTable={effectiveTable}
           currencySymbol={currencySymbol}
         />
+      )}
+      {(data.restaurant.websiteUrl || data.restaurant.instagramUrl || data.restaurant.facebookUrl) && (
+        <footer className="pb-24 pt-2 text-center">
+          <div className="inline-flex items-center gap-3">
+            {data.restaurant.websiteUrl && (
+              <a
+                href={data.restaurant.websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Website"
+                className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm hover:border-slate-300 hover:text-slate-700"
+              >
+                {/* Globe icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM4.332 8.027a6.012 6.012 0 0 1 1.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 0 1 9 7.5V8a2 2 0 0 0 4 0 2 2 0 0 1 1.523-1.943A5.977 5.977 0 0 1 16 10c0 .34-.028.675-.083 1H15a2 2 0 0 0-2 2v2.197A5.973 5.973 0 0 1 10 16v-2a2 2 0 0 0-2-2 2 2 0 0 1-2-2 2 2 0 0 0-1.668-1.973Z" clipRule="evenodd" />
+                </svg>
+              </a>
+            )}
+            {data.restaurant.instagramUrl && (
+              <a
+                href={data.restaurant.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm hover:border-slate-300 hover:text-pink-600"
+              >
+                {/* Instagram icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069ZM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0Zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324ZM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881Z"/>
+                </svg>
+              </a>
+            )}
+            {data.restaurant.facebookUrl && (
+              <a
+                href={data.restaurant.facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 shadow-sm hover:border-slate-300 hover:text-blue-600"
+              >
+                {/* Facebook icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073Z"/>
+                </svg>
+              </a>
+            )}
+          </div>
+        </footer>
       )}
     </div>
   )

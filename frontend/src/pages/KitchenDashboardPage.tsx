@@ -4,6 +4,8 @@ import { io, type Socket } from 'socket.io-client'
 import KitchenOrderCard, { type KitchenOrder } from '../components/KitchenOrderCard'
 import emptyCartIllustration from '../assets/empty-cart-illustration.png'
 import { useAuth } from '../components/AuthContext'
+import { apiFetch } from '../lib/api'
+import type { Restaurant } from '../components/types'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000'
 
@@ -28,7 +30,8 @@ interface RestaurantTable {
 
 export default function KitchenDashboardPage() {
   const { restaurantId } = useParams<{ restaurantId: string }>()
-  const { restaurant } = useAuth()
+  const { restaurant, token, updateRestaurant } = useAuth()
+  const [pausingOrders, setPausingOrders] = useState(false)
   const [orders, setOrders] = useState<KitchenOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -581,11 +584,30 @@ export default function KitchenDashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
 
+  const isAcceptingOrders = restaurant?.allowOrders !== false
+
+  const handleToggleOrders = async () => {
+    if (!restaurant || !token) return
+    setPausingOrders(true)
+    try {
+      const updated = await apiFetch<Restaurant>(`/api/restaurants/${restaurant._id}`, {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify({ allowOrders: !isAcceptingOrders }),
+      })
+      updateRestaurant(updated)
+    } catch {
+      // ignore; the UI will just stay in its previous state
+    } finally {
+      setPausingOrders(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="mx-auto max-w-4xl px-4 py-4">
-        <header className="mb-5 flex items-center justify-between">
-          <div>
+        <header className="mb-5 flex items-center justify-between gap-3">
+          <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
               {restaurant && restaurantId === restaurant._id && restaurant.name
                 ? `${restaurant.name} · Kitchen`
@@ -595,6 +617,25 @@ export default function KitchenDashboardPage() {
               Incoming orders and waiter calls in real time.
             </p>
           </div>
+          {restaurant && restaurantId === restaurant._id && token && (
+            <button
+              type="button"
+              onClick={() => { void handleToggleOrders() }}
+              disabled={pausingOrders}
+              className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
+                isAcceptingOrders
+                  ? 'bg-emerald-100 text-emerald-800 hover:bg-red-100 hover:text-red-700'
+                  : 'bg-red-100 text-red-700 hover:bg-emerald-100 hover:text-emerald-800'
+              }`}
+              title={isAcceptingOrders ? 'Click to pause new orders' : 'Click to resume accepting orders'}
+            >
+              {pausingOrders
+                ? '…'
+                : isAcceptingOrders
+                  ? 'Orders: ON'
+                  : 'Orders: PAUSED'}
+            </button>
+          )}
         </header>
         <div className="mb-4 flex gap-2 rounded-full bg-slate-100 p-1 text-xs">
           <button

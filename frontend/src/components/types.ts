@@ -57,6 +57,9 @@ export interface Restaurant {
   printerEnabled?: boolean
   printerName?: string
   logoUrl?: string
+  websiteUrl?: string
+  instagramUrl?: string
+  facebookUrl?: string
   businessPlanEnabled?: boolean
   businessPlanTitle?: string
   businessPlanDescription?: string

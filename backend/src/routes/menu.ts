@@ -286,6 +286,17 @@ router.patch('/restaurants/:restaurantId', authenticateOwner, async (req, res) =
         unset = { ...(unset ?? {}), logoUrl: 1 }
       }
     }
+    // Social / web presence links
+    for (const field of ['websiteUrl', 'instagramUrl', 'facebookUrl'] as const) {
+      if (typeof body[field] === 'string') {
+        const trimmed = (body[field] as string).trim()
+        if (trimmed) {
+          update[field] = trimmed
+        } else {
+          unset = { ...(unset ?? {}), [field]: 1 }
+        }
+      }
+    }
 
     if (unset && Object.keys(unset).length > 0) {
       ;(update as any).$unset = unset
