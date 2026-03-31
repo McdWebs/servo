@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { io, type Socket } from 'socket.io-client'
 import KitchenOrderCard, { type KitchenOrder } from '../components/KitchenOrderCard'
@@ -71,6 +71,9 @@ export default function KitchenDashboardPage() {
   const [collapsedTables, setCollapsedTables] = useState<Set<string>>(new Set())
   const [selectedTableKeys, setSelectedTableKeys] = useState<Set<string>>(new Set())
   const [mergedClearLoading, setMergedClearLoading] = useState(false)
+  const lastInitialOrdersFetchAtRef = useRef(0)
+  const lastTablesFetchAtRef = useRef(0)
+  const pollBackoffUntilRef = useRef(0)
 
   const toggleTableCollapsed = (tableKey: string) => {
     setCollapsedTables((prev) => {
@@ -139,11 +142,20 @@ export default function KitchenDashboardPage() {
   useEffect(() => {
     const load = async () => {
       if (!restaurantId) return
+      const now = Date.now()
+      // React StrictMode in dev can run effects twice on mount; avoid duplicate immediate calls.
+      if (now - lastInitialOrdersFetchAtRef.current < 1200) return
+      lastInitialOrdersFetchAtRef.current = now
       setLoading(true)
       setError(null)
       try {
         const res = await fetch(`${API_BASE}/api/restaurants/${restaurantId}/orders`)
         const data = (await res.json()) as KitchenOrder[] & { message?: string }
+        if (res.status === 429) {
+          setError('Rate limited. Retrying automatically in a few seconds.')
+          pollBackoffUntilRef.current = Date.now() + 15000
+          return
+        }
         if (!res.ok) {
           throw new Error(data.message ?? 'Failed to load orders')
         }
@@ -152,6 +164,11 @@ export default function KitchenDashboardPage() {
           `${API_BASE}/api/restaurants/${restaurantId}/waiter-calls`
         )
         const waiterData = (await waiterRes.json()) as WaiterCall[] & { message?: string }
+        if (waiterRes.status === 429) {
+          setError('Rate limited. Retrying automatically in a few seconds.')
+          pollBackoffUntilRef.current = Date.now() + 15000
+          return
+        }
         if (!waiterRes.ok) {
           throw new Error(waiterData.message ?? 'Failed to load waiter calls')
         }
@@ -170,9 +187,14 @@ export default function KitchenDashboardPage() {
     if (!restaurantId || activeTab !== 'orders') return
 
     const intervalId = window.setInterval(async () => {
+      if (Date.now() < pollBackoffUntilRef.current) return
       try {
         const res = await fetch(`${API_BASE}/api/restaurants/${restaurantId}/orders`)
         const data = (await res.json()) as KitchenOrder[] & { message?: string }
+        if (res.status === 429) {
+          pollBackoffUntilRef.current = Date.now() + 15000
+          return
+        }
         if (res.ok) {
           setOrders(data)
         }
@@ -180,6 +202,10 @@ export default function KitchenDashboardPage() {
           `${API_BASE}/api/restaurants/${restaurantId}/waiter-calls`
         )
         const waiterData = (await waiterRes.json()) as WaiterCall[] & { message?: string }
+        if (waiterRes.status === 429) {
+          pollBackoffUntilRef.current = Date.now() + 15000
+          return
+        }
         if (waiterRes.ok) {
           setWaiterCalls(waiterData)
         }
@@ -196,10 +222,17 @@ export default function KitchenDashboardPage() {
   useEffect(() => {
     const loadTables = async () => {
       if (!restaurantId) return
+      const now = Date.now()
+      // Avoid duplicate initial table request from StrictMode dev effect replay.
+      if (now - lastTablesFetchAtRef.current < 1200) return
+      lastTablesFetchAtRef.current = now
       setTablesLoading(true)
       try {
         const res = await fetch(`${API_BASE}/api/restaurants/${restaurantId}/tables`)
         const data = (await res.json()) as RestaurantTable[] & { message?: string }
+        if (res.status === 429) {
+          return
+        }
         if (!res.ok) {
           throw new Error(data.message ?? 'Failed to load tables')
         }

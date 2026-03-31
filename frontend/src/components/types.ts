@@ -75,5 +75,9 @@ export interface CartItem {
   quantity: number
   notes?: string
   imageUrl?: string
+  /**
+   * For bundle rows (e.g. business meal), submit these real menu items to backend.
+   */
+  bundleItems?: { menuItemId: string; quantity: number }[]
 }
 
