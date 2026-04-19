@@ -1,0 +1,11 @@
+{
+  "name": "servo",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write \"frontend\" \"backend\"",
+    "format:check": "prettier --check \"frontend\" \"backend\""
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}
