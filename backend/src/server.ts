@@ -23,7 +23,7 @@ const app = express()
 // ── CORS ─────────────────────────────────────────────────────────────────────
 // In production set ALLOWED_ORIGINS="https://yourapp.com,https://www.yourapp.com"
 // During development leave it unset to allow all origins.
-const allowedOriginsEnv = process.env.ALLOWED_ORIGINS
+const allowedOriginsEnv = process.env.CORS_ORIGIN || process.env.ALLOWED_ORIGINS
 const corsOrigin: cors.CorsOptions['origin'] = allowedOriginsEnv
   ? allowedOriginsEnv.split(',').map((o) => o.trim())
   : true

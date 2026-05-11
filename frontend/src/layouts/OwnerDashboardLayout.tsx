@@ -1,22 +1,24 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../components/AuthContext'
-
-const navLinks = [
-  { to: '/owner/menu',       label: 'תפריט' },
-  { to: '/owner/stats',      label: 'סטטיסטיקות' },
-  { to: '/owner/promotions', label: 'מבצעים' },
-  { to: '/owner/loyalty',    label: 'לויאלטי' },
-  { to: '/owner/qr',         label: 'QR Codes' },
-  { to: '/owner/settings',   label: 'הגדרות' },
-  { to: '/owner/feedback',   label: 'פידבק' },
-]
+import { useLang } from '../contexts/LanguageContext'
 
 export default function OwnerDashboardLayout() {
   const { restaurant, logout } = useAuth()
   const navigate = useNavigate()
+  const { t, lang, setLang, dir } = useLang()
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const navLinks = [
+    { to: '/owner/menu',       label: t('menu') },
+    { to: '/owner/stats',      label: t('stats') },
+    { to: '/owner/promotions', label: t('promotions') },
+    { to: '/owner/loyalty',    label: t('loyalty') },
+    { to: '/owner/qr',         label: t('qrCodes') },
+    { to: '/owner/settings',   label: t('settings') },
+    { to: '/owner/feedback',   label: t('feedback') },
+  ]
 
   const handleLogout = () => {
     setShowSignOutConfirm(false)
@@ -35,14 +37,14 @@ export default function OwnerDashboardLayout() {
     }`
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900" dir={dir}>
       <div className="sticky top-0 z-20">
         {restaurant?.isSuspended && (
           <div
             className="border-b border-amber-300 bg-amber-100 px-3 py-2.5 text-center text-sm font-medium text-amber-900"
             role="alert"
           >
-            המסעדה שלך מושהית כרגע. התפריט הציבורי וההזמנות מושבתים. פנה לתמיכה.
+            {t('suspendedBanner')}
           </div>
         )}
         <header className="border-b border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
@@ -69,8 +71,8 @@ export default function OwnerDashboardLayout() {
                   rel="noopener noreferrer"
                   className="touch-manipulation whitespace-nowrap rounded border border-slate-200 bg-white px-1.5 py-1 text-[11px] font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 sm:px-2"
                 >
-                  <span className="sm:hidden">תפריט</span>
-                  <span className="hidden sm:inline">תפריט לאורח</span>
+                  <span className="sm:hidden">{t('menu')}</span>
+                  <span className="hidden sm:inline">{t('guestMenu')}</span>
                 </a>
               )}
               {restaurant?._id && (
@@ -79,15 +81,22 @@ export default function OwnerDashboardLayout() {
                   className="touch-manipulation whitespace-nowrap rounded border border-slate-200 bg-white px-1.5 py-1 text-[11px] font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 sm:px-2"
                   onClick={() => navigate(`/kitchen/${restaurant._id}`)}
                 >
-                  מטבח
+                  {t('kitchen')}
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => setLang(lang === 'he' ? 'en' : 'he')}
+                className="touch-manipulation whitespace-nowrap rounded border border-slate-200 bg-white px-1.5 py-1 text-[11px] font-medium text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 sm:px-2"
+              >
+                {t('langToggle')}
+              </button>
               <button
                 type="button"
                 onClick={() => setShowSignOutConfirm(true)}
                 className="touch-manipulation whitespace-nowrap rounded border border-rose-100 bg-white px-1.5 py-1 text-[11px] font-medium text-rose-500 shadow-sm transition-colors hover:bg-rose-50 sm:px-2"
               >
-                יציאה
+                {t('signOut')}
               </button>
             </div>
 
@@ -99,7 +108,7 @@ export default function OwnerDashboardLayout() {
               aria-label="Toggle owner navigation"
               aria-expanded={mobileMenuOpen}
             >
-              <span className="mr-1 text-[11px]">תפריט</span>
+              <span className="mr-1 text-[11px]">{t('menu')}</span>
               <span className="flex flex-col gap-[3px]">
                 <span className="block h-[1px] w-3 rounded-full bg-slate-700" />
                 <span className="block h-[1px] w-3 rounded-full bg-slate-700" />
@@ -133,7 +142,7 @@ export default function OwnerDashboardLayout() {
                   className="mt-1 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  תפריט לאורח
+                  {t('guestMenu')}
                 </a>
               )}
               {restaurant?._id && (
@@ -145,9 +154,19 @@ export default function OwnerDashboardLayout() {
                     navigate(`/kitchen/${restaurant._id}`)
                   }}
                 >
-                  מטבח
+                  {t('kitchen')}
                 </button>
               )}
+              <button
+                type="button"
+                className="mt-1 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50"
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  setLang(lang === 'he' ? 'en' : 'he')
+                }}
+              >
+                {t('langToggle')}
+              </button>
               <button
                 type="button"
                 className="mt-1 flex items-center justify-between rounded-lg border border-rose-100 bg-white px-2 py-2 text-xs font-medium text-rose-500 shadow-sm transition-colors hover:bg-rose-50"
@@ -156,7 +175,7 @@ export default function OwnerDashboardLayout() {
                   setShowSignOutConfirm(true)
                 }}
               >
-                יציאה
+                {t('signOut')}
               </button>
             </nav>
           </div>
@@ -166,24 +185,22 @@ export default function OwnerDashboardLayout() {
       {showSignOutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-4 shadow-xl">
-            <h2 className="text-sm font-semibold text-slate-900">לצאת מהחשבון?</h2>
-            <p className="mt-2 text-xs text-slate-600">
-              תצטרך להתחבר שוב כדי לגשת ללוח הבקרה.
-            </p>
+            <h2 className="text-sm font-semibold text-slate-900">{t('signOutQuestion')}</h2>
+            <p className="mt-2 text-xs text-slate-600">{t('signOutDesc')}</p>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
                 className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
                 onClick={() => setShowSignOutConfirm(false)}
               >
-                ביטול
+                {t('cancel')}
               </button>
               <button
                 type="button"
                 className="rounded-full bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700"
                 onClick={handleLogout}
               >
-                יציאה
+                {t('signOut')}
               </button>
             </div>
           </div>

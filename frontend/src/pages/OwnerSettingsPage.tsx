@@ -4,6 +4,7 @@ import { useAuth } from "../components/AuthContext";
 import { apiFetch } from "../lib/api";
 import type { Restaurant } from "../components/types";
 import MapLocationPicker from "../components/MapLocationPicker";
+import { useLang } from "../contexts/LanguageContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
 
@@ -68,6 +69,7 @@ const TIMEZONES = [
 export default function OwnerSettingsPage() {
   const { owner, restaurant, token, updateRestaurant, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLang();
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -203,7 +205,7 @@ export default function OwnerSettingsPage() {
         },
       );
       updateRestaurant(updated);
-      setSuccess("Settings saved");
+      setSuccess(t('settingsSaved'));
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -923,7 +925,7 @@ export default function OwnerSettingsPage() {
               className="w-full sm:w-auto inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
               disabled={saving || isPristine}
             >
-              {saving ? "Saving…" : "Save all settings"}
+              {saving ? t('saving') : t('saveSettings')}
             </button>
           </div>
         </form>

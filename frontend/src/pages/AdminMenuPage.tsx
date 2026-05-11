@@ -7,6 +7,7 @@ import type {
   Restaurant,
 } from "../components/types";
 import { useAuth } from "../components/AuthContext";
+import { useLang } from "../contexts/LanguageContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
 
@@ -90,6 +91,7 @@ export default function AdminMenuPage() {
     restaurantId: string;
   }>();
   const { restaurant: authRestaurant, token } = useAuth();
+  const { t, tf, dir } = useLang();
   const restaurantId = authRestaurant?._id ?? routeRestaurantId;
   const [data, setData] = useState<AdminMenuResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -255,18 +257,6 @@ export default function AdminMenuPage() {
                 .filter(Boolean),
             ]),
           );
-
-    if (allergens.length === 0) {
-      // eslint-disable-next-line no-alert
-      alert("Please select at least one allergen or add a custom allergen.");
-      return false;
-    }
-
-    if (tags.length === 0) {
-      // eslint-disable-next-line no-alert
-      alert("Please select at least one tag or add a custom tag.");
-      return false;
-    }
 
     formData.set("name", trimmedName);
     formData.set("description", trimmedDescription);
@@ -690,9 +680,9 @@ export default function AdminMenuPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900">
+      <div className="min-h-screen bg-slate-50 text-slate-900" dir={dir}>
         <div className="mx-auto max-w-3xl px-3 py-6 sm:px-4">
-          <p className="text-sm text-slate-600">Loading menu…</p>
+          <p className="text-sm text-slate-600">{t('loadingMenu')}</p>
         </div>
       </div>
     );
@@ -716,6 +706,7 @@ export default function AdminMenuPage() {
   return (
     <div
       className="min-h-screen bg-slate-50 text-slate-900 pb-8"
+      dir={dir}
       onClick={() => setOpenActionsItemId(null)}
     >
       <div className="mx-auto max-w-3xl px-3 py-4 space-y-6 sm:px-4 sm:py-6">
@@ -730,7 +721,7 @@ export default function AdminMenuPage() {
                   disabled={saving}
                   onClick={() => setAddCategoryOpen(true)}
                 >
-                  + Add category
+                  + {t('addCategory')}
                 </button>
                 <button
                   type="button"
@@ -738,7 +729,7 @@ export default function AdminMenuPage() {
                   disabled={saving}
                   onClick={() => setBulkImportOpen(true)}
                 >
-                  ⬆ Bulk import from text
+                  ⬆ {t('bulkImportFromText')}
                 </button>
               </div>
             ) : (
@@ -758,7 +749,7 @@ export default function AdminMenuPage() {
                   name="name"
                   autoFocus
                   className="min-h-[44px] w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none placeholder:text-slate-400"
-                  placeholder="New category name"
+                  placeholder={t('newCategoryName')}
                 />
                 <div className="flex gap-2">
                   <button
@@ -766,14 +757,14 @@ export default function AdminMenuPage() {
                     className="min-h-[44px] flex-1 touch-manipulation rounded-full border border-slate-200 bg-white px-3 py-2 text-slate-700 hover:bg-slate-50"
                     onClick={() => setAddCategoryOpen(false)}
                   >
-                    Cancel
+                    {t('cancel')}
                   </button>
                   <button
                     type="submit"
                     className="min-h-[44px] flex-1 touch-manipulation rounded-full bg-emerald-600 px-3 py-2 font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
                     disabled={saving}
                   >
-                    Add
+                    {t('add')}
                   </button>
                 </div>
               </form>
@@ -782,7 +773,7 @@ export default function AdminMenuPage() {
           {/* Desktop: always-visible form */}
           <div className="hidden sm:block">
             <h2 className="mb-2 text-sm font-semibold text-slate-900">
-              Add category
+              {t('addCategory')}
             </h2>
             <form
               className="flex flex-col gap-2 text-xs sm:flex-row"
@@ -798,14 +789,14 @@ export default function AdminMenuPage() {
               <input
                 name="name"
                 className="min-h-[44px] flex-1 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                placeholder="New category name"
+                placeholder={t('newCategoryName')}
               />
               <button
                 type="submit"
                 className="min-h-[44px] touch-manipulation rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
                 disabled={saving}
               >
-                Add category
+                {t('addCategory')}
               </button>
               <button
                 type="button"
@@ -813,7 +804,7 @@ export default function AdminMenuPage() {
                 disabled={saving}
                 onClick={() => setBulkImportOpen(true)}
               >
-                ⬆ Bulk import
+                ⬆ {t('bulkImport')}
               </button>
             </form>
           </div>
@@ -823,11 +814,10 @@ export default function AdminMenuPage() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-sm font-semibold text-slate-900">
-                Business plans (עסקיות)
+                {t('businessPlans')}
               </h2>
               <p className="mt-0.5 text-[11px] text-slate-500">
-                Fixed-price business meals: pick items from your menu. Guests
-                see these at the top of the menu.
+                {t('businessPlansDesc')}
               </p>
             </div>
             <button
@@ -847,13 +837,12 @@ export default function AdminMenuPage() {
                 })
               }
             >
-              + New business plan
+              {t('newBusinessPlan')}
             </button>
           </div>
           {(!data.businessPlans || data.businessPlans.length === 0) && (
             <p className="text-[11px] text-slate-500">
-              No business plans yet. Click &ldquo;New business plan&rdquo; to
-              add one.
+              {t('noBusinessPlans')}
             </p>
           )}
           {data.businessPlans && data.businessPlans.length > 0 && (
@@ -870,11 +859,11 @@ export default function AdminMenuPage() {
                       </span>
                       {plan.active === false ? (
                         <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[9px] text-slate-700">
-                          Hidden
+                          {t('hidden')}
                         </span>
                       ) : (
                         <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] text-emerald-700">
-                          Active
+                          {t('active')}
                         </span>
                       )}
                     </div>
@@ -900,19 +889,19 @@ export default function AdminMenuPage() {
                         disabled={planSaving}
                         onClick={() => setEditingPlan(plan)}
                       >
-                        Edit
+                        {t('edit')}
                       </button>
                       <button
                         type="button"
                         className="rounded-full border border-rose-200 bg-rose-50 px-2 py-1 text-[10px] text-rose-700 hover:bg-rose-100"
                         disabled={planSaving}
                         onClick={() => {
-                          if (confirm(`Delete business plan "${plan.name}"?`)) {
+                          if (confirm(tf('deleteItemConfirm', plan.name))) {
                             void deleteBusinessPlan(plan._id);
                           }
                         }}
                       >
-                        Delete
+                        {t('delete')}
                       </button>
                     </div>
                   </div>
@@ -925,7 +914,7 @@ export default function AdminMenuPage() {
         <section className="space-y-6">
           {data.categories.length === 0 && (
             <p className="text-xs text-slate-500">
-              No categories yet. Add one above.
+              {t('noCategories')}
             </p>
           )}
           {data.categories.map((category, catIndex) => {
@@ -1011,7 +1000,7 @@ export default function AdminMenuPage() {
                             )
                           }
                         >
-                          Save
+                          {t('save')}
                         </button>
                         <button
                           type="button"
@@ -1021,7 +1010,7 @@ export default function AdminMenuPage() {
                             setEditingCategoryName("");
                           }}
                         >
-                          Cancel
+                          {t('cancel')}
                         </button>
                       </div>
                     ) : (
@@ -1037,7 +1026,7 @@ export default function AdminMenuPage() {
                       {/* Collapse toggle */}
                       <button
                         type="button"
-                        title={isCollapsed ? "Expand" : "Collapse"}
+                        title={isCollapsed ? t('expand') : t('collapse')}
                         className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                         onClick={() => toggleCategoryCollapsed(category._id)}
                       >
@@ -1059,7 +1048,7 @@ export default function AdminMenuPage() {
                       {/* Rename */}
                       <button
                         type="button"
-                        title="Rename category"
+                        title={t('renameCategoryTitle')}
                         disabled={saving}
                         className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40"
                         onClick={() => {
@@ -1085,7 +1074,7 @@ export default function AdminMenuPage() {
                       {/* Move up */}
                       <button
                         type="button"
-                        title="Move up"
+                        title={t('moveUp')}
                         disabled={catIndex === 0 || saving}
                         className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30"
                         onClick={() => {
@@ -1117,7 +1106,7 @@ export default function AdminMenuPage() {
                       {/* Move down */}
                       <button
                         type="button"
-                        title="Move down"
+                        title={t('moveDown')}
                         disabled={
                           catIndex === data.categories.length - 1 || saving
                         }
@@ -1159,7 +1148,7 @@ export default function AdminMenuPage() {
                       {/* Add item */}
                       <button
                         type="button"
-                        title="Add item"
+                        title={t('addItemTitle')}
                         disabled={saving}
                         className="flex h-8 items-center gap-1.5 rounded-full bg-emerald-600 px-3 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
                         onClick={() =>
@@ -1182,13 +1171,13 @@ export default function AdminMenuPage() {
                             d="M8 3v10M3 8h10"
                           />
                         </svg>
-                        <span className="hidden sm:inline">Add item</span>
+                        <span className="hidden sm:inline">{t('addItemBtn')}</span>
                       </button>
 
                       {/* Delete category */}
                       <button
                         type="button"
-                        title="Delete category"
+                        title={t('deleteCategory')}
                         disabled={saving}
                         className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
                         onClick={() =>
@@ -1356,7 +1345,7 @@ export default function AdminMenuPage() {
                                     </>
                                   ) : (
                                     <span className="text-[10px] text-slate-400">
-                                      No tags or allergens set
+                                      {t('noTagsOrAllergens')}
                                     </span>
                                   )}
                                 </div>
@@ -1383,7 +1372,7 @@ export default function AdminMenuPage() {
                                       )
                                     }
                                   >
-                                    Actions
+                                    {t('actions')}
                                   </button>
                                   {openActionsItemId === item._id && (
                                     <div className="absolute right-0 z-30 mt-1 w-40 rounded-lg border border-slate-200 bg-white py-1 text-[11px] shadow-lg">
@@ -1467,8 +1456,8 @@ export default function AdminMenuPage() {
                                         }}
                                       >
                                         {item.available === false
-                                          ? "Mark available"
-                                          : "Mark unavailable"}
+                                          ? t('markAvailable')
+                                          : t('markUnavailable')}
                                       </button>
                                       <button
                                         type="button"
@@ -1482,7 +1471,7 @@ export default function AdminMenuPage() {
                                           setOpenActionsItemId(null);
                                         }}
                                       >
-                                        Edit
+                                        {t('edit')}
                                       </button>
                                       <button
                                         type="button"
@@ -1497,7 +1486,7 @@ export default function AdminMenuPage() {
                                           setOpenActionsItemId(null);
                                         }}
                                       >
-                                        Delete
+                                        {t('delete')}
                                       </button>
                                     </div>
                                   )}
@@ -1509,7 +1498,7 @@ export default function AdminMenuPage() {
                       </div>
                     ) : (
                       <p className="text-[11px] text-slate-500 px-1 py-2">
-                        No items in this category yet.
+                        {t('noItemsInCategory')}
                       </p>
                     )}
                   </div>
@@ -1523,15 +1512,14 @@ export default function AdminMenuPage() {
           <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-y-auto overscroll-contain sm:items-center">
             <div className="w-full max-w-lg rounded-2xl bg-white p-4 shadow-xl my-4 sm:my-0">
               <h2 className="text-sm font-semibold text-slate-900">
-                Bulk import from text
+                {t('bulkImportFromText')}
               </h2>
               <p className="mt-1 text-[11px] text-slate-500">
-                Paste your menu text below. A line without a dash is treated as
-                a category name. A line like{" "}
+                {t('bulkImportDesc')}{" "}
                 <span className="font-mono font-medium text-slate-700">
                   Pinko — ₪53
                 </span>{" "}
-                is treated as an item.
+                {t('bulkImportExample')}
               </p>
               <textarea
                 className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400 font-mono leading-relaxed"
@@ -1549,8 +1537,7 @@ export default function AdminMenuPage() {
                 if (parsed.length === 0) {
                   return (
                     <p className="mt-2 text-[11px] text-amber-600">
-                      No valid categories or items detected yet. Make sure items
-                      use a dash (—) separator.
+                      {t('bulkImportNoValid')}
                     </p>
                   );
                 }
@@ -1561,9 +1548,7 @@ export default function AdminMenuPage() {
                 return (
                   <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2 space-y-2 max-h-52 overflow-y-auto">
                     <p className="text-[11px] font-semibold text-emerald-800">
-                      Preview — {parsed.length}{" "}
-                      {parsed.length === 1 ? "category" : "categories"},{" "}
-                      {totalItems} {totalItems === 1 ? "item" : "items"}
+                      {tf('bulkImportPreview', parsed.length, totalItems)}
                     </p>
                     {parsed.map((cat, i) => (
                       <div key={i}>
@@ -1594,8 +1579,7 @@ export default function AdminMenuPage() {
               {bulkImportProgress !== null && (
                 <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
                   <p className="text-[11px] font-medium text-slate-700">
-                    Importing… {bulkImportProgress.done} /{" "}
-                    {bulkImportProgress.total} items
+                    {tf('bulkImporting', bulkImportProgress.done, bulkImportProgress.total)}
                   </p>
                   <div className="mt-1.5 h-1.5 w-full rounded-full bg-slate-200">
                     <div
@@ -1619,7 +1603,7 @@ export default function AdminMenuPage() {
                     setBulkImportProgress(null);
                   }}
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   type="button"
@@ -1637,16 +1621,16 @@ export default function AdminMenuPage() {
                   }}
                 >
                   {bulkImportProgress !== null
-                    ? `Importing… (${bulkImportProgress.done}/${bulkImportProgress.total})`
+                    ? tf('bulkImporting', bulkImportProgress.done, bulkImportProgress.total)
                     : (() => {
                         const parsed = parseBulkMenuText(bulkImportText);
                         if (!bulkImportText.trim() || parsed.length === 0)
-                          return "Import";
+                          return t('importBtn');
                         const totalItems = parsed.reduce(
                           (s, c) => s + c.items.length,
                           0,
                         );
-                        return `Import ${totalItems} item${totalItems === 1 ? "" : "s"} in ${parsed.length} categor${parsed.length === 1 ? "y" : "ies"}`;
+                        return tf('bulkImportBtn', totalItems, parsed.length);
                       })()}
                 </button>
               </div>
@@ -1657,12 +1641,12 @@ export default function AdminMenuPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 overflow-y-auto">
             <div className="w-full max-w-sm rounded-2xl bg-white p-4 shadow-xl my-auto">
               <h2 className="text-sm font-semibold text-slate-900">
-                Confirm delete
+                {t('confirmDelete')}
               </h2>
               <p className="mt-2 text-xs text-slate-700">
                 {pendingDelete.type === "category"
-                  ? `Delete category "${pendingDelete.name}" and all its items?`
-                  : `Delete item "${pendingDelete.name}"?`}
+                  ? tf('deleteCategoryConfirm', pendingDelete.name)
+                  : tf('deleteItemConfirm', pendingDelete.name)}
               </p>
               <div className="mt-4 flex justify-end gap-2 text-xs">
                 <button
@@ -1671,7 +1655,7 @@ export default function AdminMenuPage() {
                   disabled={saving}
                   onClick={() => setPendingDelete(null)}
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   type="button"
@@ -1687,7 +1671,7 @@ export default function AdminMenuPage() {
                     setPendingDelete(null);
                   }}
                 >
-                  Delete
+                  {t('delete')}
                 </button>
               </div>
             </div>
@@ -1696,13 +1680,9 @@ export default function AdminMenuPage() {
         {addingItemForCategory && (
           <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-y-auto overscroll-contain sm:items-center">
             <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl my-4 sm:my-0 max-h-[90vh] overflow-y-auto">
-              <h2 className="text-sm font-semibold text-slate-900">Add item</h2>
+              <h2 className="text-sm font-semibold text-slate-900">{t('addItemTitle')}</h2>
               <p className="mt-1 text-[11px] text-slate-600">
-                Create a new menu item in{" "}
-                <span className="font-semibold">
-                  {addingItemForCategory.name}
-                </span>
-                .
+                {tf('addItemDesc', addingItemForCategory.name)}
               </p>
               <form
                 className="mt-3 space-y-2 text-xs"
@@ -1731,7 +1711,7 @@ export default function AdminMenuPage() {
                     name="name"
                     required
                     className="min-h-[44px] flex-1 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                    placeholder="Item name"
+                    placeholder={t('itemName')}
                   />
                   <input
                     name="price"
@@ -1739,7 +1719,7 @@ export default function AdminMenuPage() {
                     min={0.01}
                     step="0.01"
                     className="min-h-[44px] w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-right text-xs text-slate-900 outline-none placeholder:text-slate-400 sm:w-24"
-                    placeholder="Price"
+                    placeholder={t('price')}
                   />
                 </div>
                 <textarea
@@ -1747,12 +1727,12 @@ export default function AdminMenuPage() {
                   rows={2}
                   required
                   className="min-h-[80px] w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                  placeholder="Short description"
+                  placeholder={t('shortDescription')}
                 />
                 <div className="space-y-2">
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-medium text-slate-700">
-                      Allergens (choose or add custom)
+                      {t('allergens')}
                     </span>
                     <div className="flex flex-wrap gap-1">
                       {DEFAULT_ALLERGENS.map((allergen) => (
@@ -1773,12 +1753,12 @@ export default function AdminMenuPage() {
                     <input
                       name="allergensCustom"
                       className="mt-1 w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                      placeholder="Custom allergens (comma separated, optional)"
+                      placeholder={t('allergensCustomPlaceholder')}
                     />
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-medium text-slate-700">
-                      Tags (choose or add custom)
+                      {t('tags')}
                     </span>
                     <div className="flex flex-wrap gap-1">
                       {DEFAULT_TAGS.map((tag) => (
@@ -1799,12 +1779,12 @@ export default function AdminMenuPage() {
                     <input
                       name="tagsCustom"
                       className="mt-1 w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                      placeholder="Custom tags (comma separated, optional)"
+                      placeholder={t('tagsCustomPlaceholder')}
                     />
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-medium text-slate-700">
-                      Item photo (optional)
+                      {t('itemPhotoOptional')}
                     </span>
                     <label className="group flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2 text-[11px] text-slate-600 hover:border-emerald-400 hover:bg-emerald-50/40">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-semibold text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-700">
@@ -1812,14 +1792,14 @@ export default function AdminMenuPage() {
                       </div>
                       <div className="flex flex-col">
                         <span className="font-medium text-slate-800 group-hover:text-emerald-800">
-                          Upload item image
+                          {t('uploadItemImage')}
                         </span>
                         <span className="text-[10px] text-slate-500">
-                          Square image works best · max 5MB
+                          {t('imageHint')}
                         </span>
                         {newItemImagePreview && (
                           <span className="mt-1 text-[10px] text-emerald-700">
-                            Preview selected below
+                            {t('previewSelected')}
                           </span>
                         )}
                       </div>
@@ -1855,7 +1835,7 @@ export default function AdminMenuPage() {
                             setNewItemImagePreview(null);
                           }}
                         >
-                          Remove image
+                          {t('removeImage')}
                         </button>
                       </div>
                     )}
@@ -1868,14 +1848,14 @@ export default function AdminMenuPage() {
                     disabled={saving}
                     onClick={() => setAddingItemForCategory(null)}
                   >
-                    Cancel
+                    {t('cancel')}
                   </button>
                   <button
                     type="submit"
                     className="min-h-[44px] touch-manipulation rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
                     disabled={saving}
                   >
-                    Add item
+                    {t('addItemBtn')}
                   </button>
                 </div>
               </form>
@@ -1886,11 +1866,10 @@ export default function AdminMenuPage() {
           <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-y-auto overscroll-contain sm:items-center">
             <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl my-4 sm:my-0 max-h-[90vh] overflow-y-auto">
               <h2 className="text-sm font-semibold text-slate-900">
-                Edit item
+                {t('editItemTitle')}
               </h2>
               <p className="mt-1 text-[11px] text-slate-600">
-                Update the details for{" "}
-                <span className="font-semibold">{editingItem.item.name}</span>.
+                {tf('editItemDesc', editingItem.item.name)}
               </p>
               <form
                 className="mt-3 space-y-2 text-xs"
@@ -1915,7 +1894,7 @@ export default function AdminMenuPage() {
                     required
                     defaultValue={editingItem.item.name}
                     className="min-h-[44px] flex-1 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                    placeholder="Item name"
+                    placeholder={t('itemName')}
                   />
                   <input
                     name="price"
@@ -1924,7 +1903,7 @@ export default function AdminMenuPage() {
                     step="0.01"
                     defaultValue={editingItem.item.price.toFixed(2)}
                     className="min-h-[44px] w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-right text-xs text-slate-900 outline-none placeholder:text-slate-400 sm:w-24"
-                    placeholder="Price"
+                    placeholder={t('price')}
                   />
                 </div>
                 <textarea
@@ -1933,12 +1912,12 @@ export default function AdminMenuPage() {
                   required
                   defaultValue={editingItem.item.description}
                   className="min-h-[80px] w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                  placeholder="Short description"
+                  placeholder={t('shortDescription')}
                 />
                 <div className="space-y-2">
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-medium text-slate-700">
-                      Allergens (choose or add custom)
+                      {t('allergens')}
                     </span>
                     <div className="flex flex-wrap gap-1">
                       {DEFAULT_ALLERGENS.map((allergen) => (
@@ -1965,12 +1944,12 @@ export default function AdminMenuPage() {
                         .filter((a) => !DEFAULT_ALLERGENS.includes(a))
                         .join(", ")}
                       className="mt-1 w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                      placeholder="Custom allergens (comma separated, optional)"
+                      placeholder={t('allergensCustomPlaceholder')}
                     />
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-medium text-slate-700">
-                      Tags (choose or add custom)
+                      {t('tags')}
                     </span>
                     <div className="flex flex-wrap gap-1">
                       {DEFAULT_TAGS.map((tag) => (
@@ -1992,15 +1971,15 @@ export default function AdminMenuPage() {
                     <input
                       name="tagsCustom"
                       defaultValue={editingItem.item.tags
-                        .filter((t) => !DEFAULT_TAGS.includes(t))
+                        .filter((tg) => !DEFAULT_TAGS.includes(tg))
                         .join(", ")}
                       className="mt-1 w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none placeholder:text-slate-400"
-                      placeholder="Custom tags (comma separated, optional)"
+                      placeholder={t('tagsCustomPlaceholder')}
                     />
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-medium text-slate-700">
-                      Item photo
+                      {t('itemPhoto')}
                     </span>
                     <label className="group flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2 text-[11px] text-slate-600 hover:border-emerald-400 hover:bg-emerald-50/40">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-semibold text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-700">
@@ -2009,15 +1988,15 @@ export default function AdminMenuPage() {
                       <div className="flex flex-col">
                         <span className="font-medium text-slate-800 group-hover:text-emerald-800">
                           {editingItem.item.imageUrl
-                            ? "Change image"
-                            : "Upload image"}
+                            ? t('changeImage')
+                            : t('uploadImage')}
                         </span>
                         <span className="text-[10px] text-slate-500">
-                          Square image works best · max 5MB
+                          {t('imageHint')}
                         </span>
                         {editItemImagePreview && (
                           <span className="mt-1 text-[10px] text-emerald-700">
-                            Preview selected below
+                            {t('previewSelected')}
                           </span>
                         )}
                       </div>
@@ -2058,7 +2037,7 @@ export default function AdminMenuPage() {
                               setEditItemImagePreview(null);
                             }}
                           >
-                            Remove new image
+                            {t('removeNewImage')}
                           </button>
                         )}
                       </div>
@@ -2070,13 +2049,13 @@ export default function AdminMenuPage() {
                           name="removeImage"
                           className="h-3 w-3"
                         />
-                        <span>Remove existing image</span>
+                        <span>{t('removeExistingImage')}</span>
                       </label>
                     )}
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-medium text-slate-700">
-                      Availability
+                      {t('availability')}
                     </span>
                     <label className="inline-flex items-center gap-2 text-[11px] text-slate-700">
                       <input
@@ -2085,7 +2064,7 @@ export default function AdminMenuPage() {
                         defaultChecked={editingItem.item.available ?? true}
                         className="h-3 w-3"
                       />
-                      <span>Item available for ordering</span>
+                      <span>{t('itemAvailableLabel')}</span>
                     </label>
                   </div>
                 </div>
@@ -2096,14 +2075,14 @@ export default function AdminMenuPage() {
                     disabled={saving}
                     onClick={() => setEditingItem(null)}
                   >
-                    Cancel
+                    {t('cancel')}
                   </button>
                   <button
                     type="submit"
                     className="min-h-[44px] touch-manipulation rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
                     disabled={saving}
                   >
-                    Save changes
+                    {t('save')}
                   </button>
                 </div>
               </form>
@@ -2114,11 +2093,10 @@ export default function AdminMenuPage() {
           <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-3 py-6 overflow-y-auto overscroll-contain sm:items-center">
             <div className="my-4 w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-3xl bg-white px-5 py-4 shadow-xl sm:my-0 sm:px-6 sm:py-5">
               <h2 className="text-base font-semibold text-slate-900">
-                {editingPlan._id ? "Edit business plan" : "New business plan"}
+                {editingPlan._id ? t('editBusinessPlan') : t('newBusinessPlanTitle')}
               </h2>
               <p className="mt-1 text-[11px] text-slate-600">
-                Choose a name, price, and which dishes are included in this
-                עסקית.
+                {t('businessPlansDesc')}
               </p>
               <BusinessPlanEditor
                 plan={editingPlan}

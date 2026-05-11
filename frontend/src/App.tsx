@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import MenuPage from './pages/MenuPage'
+import PremiumMenuPage from './pages/PremiumMenuPage'
 import KitchenDashboardPage from './pages/KitchenDashboardPage'
 import AdminMenuPage from './pages/AdminMenuPage'
 import OwnerLoginPage from './pages/OwnerLoginPage'
@@ -18,15 +19,18 @@ import OwnerDashboardLayout from './layouts/OwnerDashboardLayout'
 import { AuthProvider } from './components/AuthContext'
 import { SuperAdminAuthProvider } from './components/SuperAdminAuthContext'
 import SuperAdminDashboardPage from './pages/SuperAdminDashboardPage'
+import { LanguageProvider } from './contexts/LanguageContext'
 
 function App() {
   return (
+    <LanguageProvider>
     <AuthProvider>
       <SuperAdminAuthProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Navigate to="/owner/login" replace />} />
             <Route path="/restaurant/:slug/menu" element={<MenuPage />} />
+            <Route path="/restaurant/:slug/premium" element={<PremiumMenuPage />} />
             <Route path="/kitchen/:restaurantId" element={<KitchenDashboardPage />} />
             {/* Legacy direct admin route by restaurantId (for debugging) */}
             <Route path="/admin/:restaurantId" element={<AdminMenuPage />} />
@@ -57,6 +61,7 @@ function App() {
         </BrowserRouter>
       </SuperAdminAuthProvider>
     </AuthProvider>
+    </LanguageProvider>
   )
 }
 

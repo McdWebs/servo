@@ -6,6 +6,7 @@ import KitchenOrderCard, {
 } from "../components/KitchenOrderCard";
 import emptyCartIllustration from "../assets/empty-cart-illustration.png";
 import { useAuth } from "../components/AuthContext";
+import { useLang } from "../contexts/LanguageContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
 
@@ -31,6 +32,7 @@ interface RestaurantTable {
 export default function KitchenDashboardPage() {
   const { restaurantId } = useParams<{ restaurantId: string }>();
   const { restaurant } = useAuth();
+  const { t } = useLang();
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -355,7 +357,7 @@ export default function KitchenDashboardPage() {
       if (!byKey.has(key)) {
         byKey.set(key, {
           key,
-          label: tableNumber ? `Table ${tableNumber}` : "No table",
+          label: tableNumber ? `${t('table')} ${tableNumber}` : t('noTable'),
           orders: [],
           waiterCalls: [],
         });
@@ -657,11 +659,11 @@ export default function KitchenDashboardPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
               {restaurant && restaurantId === restaurant._id && restaurant.name
-                ? `${restaurant.name} · Kitchen`
-                : "Kitchen"}
+                ? `${restaurant.name} · ${t('kitchenLabel')}`
+                : t('kitchenLabel')}
             </h1>
             <p className="text-xs text-slate-500">
-              Incoming orders and waiter calls in real time.
+              {t('kitchenSubtitle')}
             </p>
           </div>
         </header>
@@ -675,7 +677,7 @@ export default function KitchenDashboardPage() {
             }`}
             onClick={() => setActiveTab("orders")}
           >
-            Orders
+            {t('orders')}
           </button>
           <button
             type="button"
@@ -686,7 +688,7 @@ export default function KitchenDashboardPage() {
             }`}
             onClick={() => setActiveTab("tables")}
           >
-            Tables
+            {t('tables')}
           </button>
           <button
             type="button"
@@ -697,7 +699,7 @@ export default function KitchenDashboardPage() {
             }`}
             onClick={() => setActiveTab("history")}
           >
-            History
+            {t('history')}
           </button>
         </div>
         {activeTab === "orders" && loading && (
@@ -738,7 +740,7 @@ export default function KitchenDashboardPage() {
         {activeTab === "orders" && !loading && waiterCalls.length > 0 && (
           <section className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3">
             <h2 className="mb-2 text-sm font-semibold text-amber-900">
-              Waiter calls
+              {t('waiterCalls')}
             </h2>
             <div className="space-y-2">
               {waiterCalls.map((call) => (
@@ -749,11 +751,10 @@ export default function KitchenDashboardPage() {
                   <div>
                     <div className="text-[11px] font-semibold text-amber-900">
                       {call.tableNumber
-                        ? `Table ${call.tableNumber}`
-                        : "Unknown table"}
+                        ? `${t('table')} ${call.tableNumber}`
+                        : t('table')}
                     </div>
                     <div className="text-[11px] text-amber-800">
-                      Called at{" "}
                       {new Date(call.createdAt).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -761,7 +762,7 @@ export default function KitchenDashboardPage() {
                     </div>
                     {call.notes && (
                       <div className="mt-1 text-[11px] text-amber-900">
-                        Notes: {call.notes}
+                        {call.notes}
                       </div>
                     )}
                   </div>
@@ -770,7 +771,7 @@ export default function KitchenDashboardPage() {
                     className="self-center rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-[11px] font-medium text-amber-900 hover:bg-amber-200"
                     onClick={() => void markWaiterCallHandled(call._id)}
                   >
-                    Mark handled
+                    {t('markHandled')}
                   </button>
                 </div>
               ))}
@@ -788,11 +789,8 @@ export default function KitchenDashboardPage() {
                   className="mb-4 h-32 w-auto opacity-95"
                 />
                 <h2 className="text-sm font-semibold text-slate-900">
-                  No orders yet
+                  {t('noOpenOrders')}
                 </h2>
-                <p className="mt-1 text-xs text-slate-500">
-                  New customer orders will appear here the moment they come in.
-                </p>
               </div>
             )}
             {!error && orders.length > 0 && (
@@ -870,13 +868,13 @@ export default function KitchenDashboardPage() {
                   onClick={() => void clearMergedTables()}
                 >
                   {mergedClearLoading
-                    ? "Clearing tables…"
-                    : "Mark paid & clear selected tables"}
+                    ? t('clearingTables')
+                    : t('markPaidClear')}
                 </button>
               </div>
             )}
             <div className="flex items-center justify-between text-xs">
-              <p className="text-slate-600">Manage tables</p>
+              <p className="text-slate-600">{t('manageTables')}</p>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -886,7 +884,7 @@ export default function KitchenDashboardPage() {
                     setCreateTableOpen(true);
                   }}
                 >
-                  + New table
+                  {t('newTable')}
                 </button>
                 <button
                   type="button"
@@ -896,7 +894,7 @@ export default function KitchenDashboardPage() {
                     setBulkCreateOpen(true);
                   }}
                 >
-                  Bulk create
+                  {t('bulkCreate')}
                 </button>
               </div>
             </div>
@@ -956,7 +954,7 @@ export default function KitchenDashboardPage() {
                     disabled={creatingTable}
                     onClick={() => void createTable()}
                   >
-                    {creatingTable ? "Creating…" : "Create table"}
+                    {creatingTable ? t('creatingTable') : t('createTable')}
                   </button>
                 </div>
               </div>
@@ -1017,7 +1015,7 @@ export default function KitchenDashboardPage() {
                     disabled={bulkCreating}
                     onClick={() => void createTablesBulk()}
                   >
-                    {bulkCreating ? "Creating…" : "Create tables"}
+                    {bulkCreating ? t('creatingTable') : t('createTables')}
                   </button>
                 </div>
               </div>
@@ -1122,7 +1120,7 @@ export default function KitchenDashboardPage() {
                             toggleTableSelected(table.key);
                           }}
                         />
-                        <span>Merge</span>
+                        <span>{t('merge')}</span>
                       </label>
                     </div>
                   </div>
@@ -1131,7 +1129,7 @@ export default function KitchenDashboardPage() {
                       {table.waiterCalls.length > 0 && (
                         <div className="mb-2 rounded-xl bg-amber-50 px-2 py-2">
                           <p className="mb-1 text-[11px] font-semibold text-amber-900">
-                            Waiter calls
+                            {t('waiterCalls')}
                           </p>
                           <div className="space-y-1">
                             {table.waiterCalls.map((call) => (
@@ -1140,7 +1138,6 @@ export default function KitchenDashboardPage() {
                                 className="flex items-center justify-between gap-2 rounded-lg bg-white/80 px-2 py-1 text-[11px]"
                               >
                                 <span className="text-amber-900">
-                                  Called at{" "}
                                   {new Date(call.createdAt).toLocaleTimeString(
                                     [],
                                     {
@@ -1156,7 +1153,7 @@ export default function KitchenDashboardPage() {
                                     void markWaiterCallHandled(call._id)
                                   }
                                 >
-                                  Mark handled
+                                  {t('markHandled')}
                                 </button>
                               </div>
                             ))}
@@ -1168,7 +1165,7 @@ export default function KitchenDashboardPage() {
                           {activeOrders.length > 0 && (
                             <div className="space-y-1">
                               <p className="text-[11px] font-semibold text-slate-800">
-                                Active orders
+                                {t('activeOrders')}
                               </p>
                               <div className="grid gap-2 md:grid-cols-2">
                                 {activeOrders.map((order) => (
@@ -1186,7 +1183,7 @@ export default function KitchenDashboardPage() {
                           {readyOrders.length > 0 && (
                             <div className="space-y-1">
                               <p className="text-[11px] font-semibold text-slate-800">
-                                Ready orders
+                                {t('readyOrders')}
                               </p>
                               <div className="grid gap-2 md:grid-cols-2">
                                 {readyOrders.map((order) => (
@@ -1265,7 +1262,7 @@ export default function KitchenDashboardPage() {
                     value={historyTableNumber}
                     onChange={(e) => setHistoryTableNumber(e.target.value)}
                   >
-                    <option value="">All tables</option>
+                    <option value="">{t('allTables')}</option>
                     {restaurantTables.map((table) => (
                       <option key={table._id} value={table.number}>
                         {table.name}
@@ -1289,15 +1286,15 @@ export default function KitchenDashboardPage() {
                       )
                     }
                   >
-                    <option value="all">All</option>
-                    <option value="new">New</option>
-                    <option value="preparing">Preparing</option>
-                    <option value="ready">Ready</option>
+                    <option value="all">{t('allStatuses')}</option>
+                    <option value="new">{t('newOrder')}</option>
+                    <option value="preparing">{t('preparing')}</option>
+                    <option value="ready">{t('ready')}</option>
                   </select>
                 </label>
                 <label className="flex flex-col gap-1">
                   <span className="text-[11px] font-medium text-slate-700">
-                    From
+                    {t('from')}
                   </span>
                   <input
                     type="date"
@@ -1308,7 +1305,7 @@ export default function KitchenDashboardPage() {
                 </label>
                 <label className="flex flex-col gap-1">
                   <span className="text-[11px] font-medium text-slate-700">
-                    To
+                    {t('to')}
                   </span>
                   <input
                     type="date"
@@ -1321,10 +1318,10 @@ export default function KitchenDashboardPage() {
               <div className="flex items-center justify-between">
                 <div className="text-[11px] text-slate-500">
                   {historyLoading
-                    ? "Loading..."
+                    ? t('loading')
                     : historyOrders.length > 0
-                      ? `${historyOrders.length} orders`
-                      : "No orders for selected filters."}
+                      ? `${historyOrders.length} ${t('orders')}`
+                      : t('noOrdersForFilters')}
                 </div>
                 <button
                   type="button"
@@ -1332,7 +1329,7 @@ export default function KitchenDashboardPage() {
                   disabled={historyLoading}
                   onClick={() => void loadHistory()}
                 >
-                  Apply filters
+                  {t('applyFilters')}
                 </button>
               </div>
               {historyError && (
@@ -1352,7 +1349,7 @@ export default function KitchenDashboardPage() {
                       </span>
                       {order.tableNumber && (
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-700">
-                          Table {order.tableNumber}
+                          {t('table')} {order.tableNumber}
                         </span>
                       )}
                     </div>

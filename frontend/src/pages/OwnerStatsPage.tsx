@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../components/AuthContext";
 import { apiFetch } from "../lib/api";
 import { BarChartCard, StatCard } from "../components/stats";
+import { useLang } from "../contexts/LanguageContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
 
@@ -34,6 +35,7 @@ function formatCurrency(value: number, currency: string) {
 
 export default function OwnerStatsPage() {
   const { token } = useAuth();
+  const { t } = useLang();
   const [stats, setStats] = useState<OwnerStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -176,22 +178,22 @@ export default function OwnerStatsPage() {
   const revenueFormatter = (n: number) => formatCurrency(n, currency);
 
   const ordersChartData = [
-    { name: "Today", value: stats.ordersToday },
-    { name: "This week", value: stats.ordersThisWeek },
-    { name: "This month", value: stats.ordersThisMonth },
+    { name: t('today'), value: stats.ordersToday },
+    { name: t('thisWeekLabel'), value: stats.ordersThisWeek },
+    { name: t('thisMonthLabel'), value: stats.ordersThisMonth },
   ];
 
   const revenueChartData = [
-    { name: "Today", value: stats.revenueToday },
-    { name: "This week", value: stats.revenueThisWeek },
-    { name: "This month", value: stats.revenueThisMonth },
+    { name: t('today'), value: stats.revenueToday },
+    { name: t('thisWeekLabel'), value: stats.revenueThisWeek },
+    { name: t('thisMonthLabel'), value: stats.revenueThisMonth },
   ];
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-xl font-bold text-slate-900">
-          Your restaurant stats
+          {t('restaurantStats')}
         </h2>
         <div className="flex gap-2">
           <button
@@ -199,7 +201,7 @@ export default function OwnerStatsPage() {
             onClick={() => void handleExport()}
             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
           >
-            ⬇ ייצא Excel
+            {t('exportExcel')}
           </button>
           <button
             type="button"
@@ -212,7 +214,7 @@ export default function OwnerStatsPage() {
             >
               ↻
             </span>
-            {refreshing ? "מרענן..." : "רענן"}
+            {refreshing ? t('refreshing') : t('refresh')}
           </button>
         </div>
       </div>
@@ -220,21 +222,21 @@ export default function OwnerStatsPage() {
       {/* Overview KPIs */}
       <section>
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">
-          Overview
+          {t('statsOverview')}
         </h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatCard
-            label="Orders today"
+            label={t('ordersToday')}
             value={stats.ordersToday}
             accent="emerald"
           />
           <StatCard
-            label="Revenue today"
+            label={t('revenueToday')}
             value={formatCurrency(stats.revenueToday, currency)}
             accent="blue"
           />
           <StatCard
-            label="Avg order value"
+            label={t('avgOrderValue')}
             value={
               stats.avgOrderValue != null
                 ? formatCurrency(stats.avgOrderValue, currency)
@@ -243,9 +245,9 @@ export default function OwnerStatsPage() {
             accent="violet"
           />
           <StatCard
-            label="Total orders"
+            label={t('totalOrders')}
             value={stats.totalOrders}
-            sublabel="All time"
+            sublabel={t('allTime')}
             accent="slate"
           />
         </div>
@@ -253,9 +255,9 @@ export default function OwnerStatsPage() {
 
       {/* Charts */}
       <section className="grid gap-6 lg:grid-cols-2">
-        <BarChartCard title="Orders by period" data={ordersChartData} />
+        <BarChartCard title={t('ordersByPeriod')} data={ordersChartData} />
         <BarChartCard
-          title="Revenue by period"
+          title={t('revenueByPeriod')}
           data={revenueChartData}
           valueFormatter={revenueFormatter}
           barColors={["#3b82f6", "#60a5fa", "#93c5fd"]}
@@ -265,26 +267,26 @@ export default function OwnerStatsPage() {
       {/* Revenue breakdown */}
       <section>
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">
-          Revenue
+          {t('revenue')}
         </h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatCard
-            label="Today"
+            label={t('today')}
             value={formatCurrency(stats.revenueToday, currency)}
             accent="slate"
           />
           <StatCard
-            label="This week"
+            label={t('thisWeekLabel')}
             value={formatCurrency(stats.revenueThisWeek, currency)}
             accent="slate"
           />
           <StatCard
-            label="This month"
+            label={t('thisMonthLabel')}
             value={formatCurrency(stats.revenueThisMonth, currency)}
             accent="slate"
           />
           <StatCard
-            label="Total revenue"
+            label={t('totalRevenue')}
             value={formatCurrency(stats.totalRevenue, currency)}
             accent="emerald"
           />
@@ -294,22 +296,22 @@ export default function OwnerStatsPage() {
       {/* Operations */}
       <section>
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">
-          Operations & engagement
+          {t('operationsEngagement')}
         </h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            label="Waiter calls handled"
+            label={t('waiterCallsHandled')}
             value={stats.waiterCallsHandled}
-            sublabel="All time"
+            sublabel={t('allTime')}
             accent="amber"
           />
           <StatCard
-            label="Waiter calls (this week)"
+            label={t('waiterCallsThisWeek')}
             value={stats.waiterCallsHandledThisWeek}
             accent="slate"
           />
           <StatCard
-            label="Avg response time"
+            label={t('avgResponseTime')}
             value={
               typeof stats.avgWaiterResponseMinutes === "number"
                 ? `${stats.avgWaiterResponseMinutes.toFixed(1)} min`
@@ -318,9 +320,9 @@ export default function OwnerStatsPage() {
             accent="slate"
           />
           <StatCard
-            label="Chat sessions"
+            label={t('chatSessions')}
             value={stats.chatSessionsTotal}
-            sublabel={`${stats.chatSessionsThisWeek} this week`}
+            sublabel={`${stats.chatSessionsThisWeek} ${t('thisWeekSuffix')}`}
             accent="violet"
           />
         </div>
